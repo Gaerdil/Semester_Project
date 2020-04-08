@@ -22,11 +22,19 @@ class Episode():
                 self.agent.display()
                 self.environnement.customer.display()
         if display:
+            print("List of the recommender choices:")
+            print(self.environnement.recommendation.choicesThisEpisode)
+            print("List of the choices of the customer :")
+            print(self.environnement.customer.choicesThisEpisode)
             print(">>>>>>>>>>>>>> end  <<<<<<<<<<<<<<")
 
         #________________ Ending the episode : keep the total reward andreinitialize the agent
+      #  print("WWWWWW" +str(self.environnement.recommendation.choicesThisEpisode))
+       # print(self.environnement.customer.choicesThisEpisode)
         self.episodeReward = self.agent.totalReward #We will
         self.agent.endEpisode()
+        self.environnement.endEpisode()
+
 
 
     def step(self):

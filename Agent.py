@@ -24,8 +24,18 @@ class Agent():
 
 
     def init_State(self): #In order to still be able to make a recommendation at the begining (when the customer made no choice yet)
-        for i in range(self.memory):
-            self.state.append(-1) #Means that nothing was chosen at the beginning
+        li = [self.environnement.customer.previous_choice_id, self.environnement.customer.choice_id]
+        for i in range(self.memory-2):
+           # self.state.append(-1) #Means that nothing was chosen at the beginning old false version
+           random_ = random.randint(0, self.environnement.items.n_items-1)
+           while random_ == li[0]:
+               random_ = random.randint(0, self.environnement.items.n_items-1)
+           li = [random_] + li
+
+        if self.memory == 1 :
+            self.state = [self.environnement.customer.choice_id]
+        else:
+            self.state = li
 
     def updateStateAndReward(self, reward): #will help update the state at each step
         #keep previous values in case we want to train
