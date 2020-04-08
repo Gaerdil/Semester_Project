@@ -1,3 +1,5 @@
+import numpy as np
+
 class Recommendation(): #part of the environnement directly dealing with recommended items
     #no agent/AIfor the moment. The choice of the ids will be determined by the agent.
     def __init__(self,items, N_recommended): #items is an Items object, N_recommended the number of recommendations
@@ -8,11 +10,20 @@ class Recommendation(): #part of the environnement directly dealing with recomme
         self.recommended_items = [] #list of ids of recommended items
         self.all_items = items #list of ALL items
 
+        # List used for debugging
+        self.choicesThisEpisode = np.zeros(self.all_items.n_items)
+
     def recommend(self, ids): #assume we have a list of ids, we just update the list
         if len(ids) != self.n_recommended:
             print("ERROR : you must recommend exactly "+str(self.n_recommended)+ " items.")
         else:
             self.recommended_items = ids
+
+        self.choicesThisEpisode[self.recommended_items] += 1
+
+    def endEpisode(self):
+        self.recommended_items = []
+        self.choicesThisEpisode = np.zeros(self.all_items.n_items)
 
     def display(self, print_items = False):
         print("---------------- Recommendations ----------------")
