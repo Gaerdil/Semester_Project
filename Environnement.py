@@ -4,10 +4,10 @@ from Recommendation import *
 from Customer import *
 
 class Environnement():
-    def __init__(self, N_items, N_recommended,behaviour="random", proba_p = 0.7 , rewardType = 'Similarity', rewardParameters = [1,1] ,name = 'envi_01'): #proba_p for ramdom choice (customer)
+    def __init__(self, N_items, N_recommended,behaviour="random", rewardType = 'Similarity', rewardParameters = [1,1] ,  proba_p = 0.7 ,  specific_items = None, name = 'envi_01'): #proba_p for ramdom choice (customer)
         self.items = Items(N_items)
         self.recommendation = Recommendation(self.items, N_recommended)
-        self.customer = Customer( self.items, self.recommendation, behaviour, proba_p )
+        self.customer = Customer( self.items, self.recommendation, behaviour, proba_p , specific_items)
         self.name = name
         self.rewardType = rewardType
         self.rewardParameters = rewardParameters

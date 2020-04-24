@@ -1,6 +1,7 @@
 import random
 import numpy as np
 from Qlearning import *
+from QlearningActionTuples import *
 
 class Agent():
     def __init__(self, environnement, memory ,  choiceMethod ,  params, name = 'toto_01' ): #memory is an hyper parameter.
@@ -15,6 +16,8 @@ class Agent():
         self.choiceMethod = choiceMethod #This defines how the Agent promotes new recommendations at each time
         self.recommendation = []
         self.name = name
+
+
         if self.choiceMethod == 'Qlearning':
             QLchoiceMethod = params['QLchoiceMethod']
             epsilon = params['epsilon']
@@ -22,6 +25,14 @@ class Agent():
             gamma = params['gamma']
             self.Qlearning = Qlearning(self, self.environnement.items.n_items, memory, self.N_recommended,epsilon  ,learning_rate , gamma, QLchoiceMethod )
 
+
+        elif self.choiceMethod == 'QlearningActionsTuples':
+            QLchoiceMethod = params['QLchoiceMethod']
+            epsilon = params['epsilon']
+            learning_rate = params['learning_rate']
+            gamma = params['gamma']
+            self.Qlearning = QlearningActionTuples(self, self.environnement.items.n_items, memory, self.N_recommended,epsilon  ,learning_rate , gamma, QLchoiceMethod )
+            self.choicesThisEpisode = np.zeros(self.Qlearning.numActions)
 
     def init_State(self): #In order to still be able to make a recommendation at the begining (when the customer made no choice yet)
         li = [self.environnement.customer.previous_choice_id, self.environnement.customer.choice_id]
@@ -46,17 +57,21 @@ class Agent():
         self.reward = reward
         self.totalReward += reward
 
-    def recommend(self):#
+    def recommend(self, train_=False):#
         if self.choiceMethod == "random" :
             self.recommendation = np.random.choice(self.environnement.items.ids[:self.environnement.customer.choice_id]+self.environnement.items.ids[self.environnement.customer.choice_id+1:],self.N_recommended, replace= False)
-        elif self.choiceMethod == "Qlearning":
+        elif self.choiceMethod == "Qlearning" :
             self.Qlearning.chooseAction()
             self.recommendation = self.Qlearning.recommendation
+        elif self.choiceMethod == "QlearningActionsTuples":
+            self.Qlearning.chooseAction(train_)
+            self.recommendation = self.Qlearning.recommendation
+            self.choicesThisEpisode[self.Qlearning.recommendation_id] += 1
         else :
             print('Error : choiceMethod not recognized')
 
     def train(self):
-        if self.choiceMethod == 'Qlearning':
+        if self.choiceMethod == 'Qlearning' or self.choiceMethod == 'QlearningActionsTuples':
             self.Qlearning.train()
 
     def endEpisode(self):
@@ -66,7 +81,9 @@ class Agent():
         self.previousState = []
         self.init_State()
         self.recommendation = []
-        if self.choiceMethod == 'Qlearning':
+        if self.choiceMethod == 'QlearningActionsTuples':
+            self.choicesThisEpisode = np.zeros(self.Qlearning.numActions)
+        if self.choiceMethod == 'Qlearning' or self.choiceMethod == 'QlearningActionsTuples':
             self.Qlearning.endEpisode()
 
     def display(self):

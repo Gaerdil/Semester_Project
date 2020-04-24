@@ -8,26 +8,35 @@ from Series import *
 from GridSearch import *
 import matplotlib.pyplot as plt
 
-print(">>>>>>>>>>> TESTING THE AGENT : IN CASE THE CUSTOMER MAKES random choices (with min SIMILAR quality) <<<<<<<<<<<<<<<<<<")
-print("Testing with more items: ")
+print(">>>>>>>>>>> TESTING THE AGENT : IN CASE THE CUSTOMER ALWAYS CHOOSES ONLY  SPECIFIC ITEMS <<<<<<<<<<<<<<<<<<")
+print("In this setting, the number of recommended items is 2. And only 2 items have a cost of 0. But the customer has specific preferences. Will the agent adapt?")
 
 # ------------ Defining several parameters - others will be chosen by grid search --------------
-N_items = 100
-N_recommended = 2
+N_items = 5
+N_recommended = 1
 memory = 1
 choiceMethod =  'QlearningActionsTuples'
 rewardType = 'Trust'
-behaviour = 'randomMinSimilarQuality'
+behaviour = 'specific'
 rewardParameters = [1,1]
-steps = 50
+steps = 10
 epochs = 5
 display = False
 displayItems  = False
-train_list = [True for u in range(4) ]+[ False ]
-p = 0.5
+train_list = [True for u in range(3) ]+[ False, False ]
+specific_items = [4,0]
 
 #------------- Defining the environnement  -----------
-environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , rewardParameters, proba_p=p )
+environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , rewardParameters , specific_items = specific_items)
+
+#>>> let's test the efficiency of our algorithm by testing with this simplified set:
+for item in environnement.items.items :
+    item.cost = 1
+environnement.items.items[2].cost =0
+environnement.items.items[4].cost =0
+#<<<
+
+environnement.items.display(True)
 
 
 # >>> Grid search over the parameters to get the best parameters

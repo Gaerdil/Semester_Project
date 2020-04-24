@@ -18,7 +18,6 @@ class Recommendation(): #part of the environnement directly dealing with recomme
             print("ERROR : you must recommend exactly "+str(self.n_recommended)+ " items.")
         else:
             self.recommended_items = ids
-
         self.choicesThisEpisode[self.recommended_items] += 1
 
     def endEpisode(self):
