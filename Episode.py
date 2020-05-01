@@ -42,7 +42,8 @@ class Episode():
 
 
     def step(self):
-        if self.agent.choiceMethod == "QlearningActionsTuples":
+        if self.agent.choiceMethod == "QlearningActionsTuples" or self.agent.choiceMethod == "LinearQlearning":
+            self.agent.recommend(self.train_)
             self.agent.recommend(self.train_)
         elif self.agent.choiceMethod != "QlearningActionsTuples":  #/!\ temporary : all agents should in the end also only choose the actions with maw value in non train mode
             self.agent.recommend()

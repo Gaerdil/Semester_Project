@@ -13,7 +13,7 @@ class GridSearch(): #helper function for hyper parameter tuning
 
         startTime = time.time()
 
-        if choiceMethod == "Qlearning" or choiceMethod =="QlearningActionsTuples":
+        if choiceMethod == "Qlearning" or choiceMethod =="QlearningActionsTuples" or choiceMethod == "LinearQlearning":
             learning_rates = [ 0.001, 0.01, 0.1, 1]
             epsilons = [0.01, 0.05, 0.1, 0.2, 0.4]
             gammas = [0.1,0.3,0.5,0.7,0.9]
@@ -26,8 +26,10 @@ class GridSearch(): #helper function for hyper parameter tuning
                                   "epsilon": eps,
                                   "learning_rate": lr,
                                   "gamma": g}
+
                         average_series = AverageSeriesNoTqdm(num_avg, environnement, memory, choiceMethod, params, epochs, train_list,
                                       steps=steps, display_avg=display_avg, display=display, displayItems=displayItems)
+
                         if average_series.avgLastReward > best_reward:
                             best_reward = average_series.avgLastReward
                             best_params = {"QLchoiceMethod": "eGreedy",
@@ -70,12 +72,11 @@ class AverageSeriesNoTqdm(): #Helpful to get a better unbiased statistical estim
             print("choice method: " + choiceMethod)
             print("epochs: "+ str(epochs))
             print("Reward hyper parameters: "+ str(environnement.rewardParameters))
-            if choiceMethod == 'Qlearning' or choiceMethod == 'QlearningActionsTuples' :
+            if choiceMethod == 'Qlearning' or choiceMethod == 'QlearningActionsTuples' or choiceMethod == 'LearningQlearning' :
                 print(params)
 
         agent = Agent(environnement, memory, choiceMethod, params)
         series = Series(environnement, agent, epochs, train_list, steps, display, displayItems)
-
         self.avgRewards = np.array(series.allRewards[:])
 
         for a in range(num_avg):
@@ -88,15 +89,4 @@ class AverageSeriesNoTqdm(): #Helpful to get a better unbiased statistical estim
         self.avgLastReward = self.avgRewards[-1]
 
 
-        if display_avg:
-            endTime = time.time()
-            print(" \n \n Execution time: "+str(endTime - startTime))
-
-            print("Qtable of the last series ------------------------------>")
-            print(agent.Qlearning.Qtable)
-            print("---------------------------------------------------->")
-            print(" ")
-            print("After the learning process : how often  is an item recommended? (total of all series) ")
-            print(self.choicesLastSerie_total)
-            print("------------------> Series ends <------------------")
 
