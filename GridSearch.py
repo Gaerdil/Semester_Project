@@ -9,33 +9,70 @@ class GridSearch(): #helper function for hyper parameter tuning
         self.display = display
 
     def __call__(self, num_avg, environnement, memory, choiceMethod, epochs, train_list, steps=5
-                     ,display_avg=False, display=False, displayItems=False ):
+                     ,display_avg=False, display=False, displayItems=False , more_params = None):
 
         startTime = time.time()
 
-        if choiceMethod == "Qlearning" or choiceMethod =="QlearningActionsTuples" or choiceMethod == "LinearQlearning":
+        if choiceMethod != "random" :
             learning_rates = [ 0.001, 0.01, 0.1, 1]
-            epsilons = [0.01, 0.05, 0.1, 0.2, 0.4]
+            #epsilons = [0.01, 0.05, 0.1, 0.2, 0.4]
+            epsilons = [ 0.1, 0.2, 0.4]
             gammas = [0.1,0.3,0.5,0.7,0.9]
+
+  # ----- AVOIDING NAN VALUES or Vanishing gradients ------------------------------------
+            if choiceMethod == "PolynomialQlearning":
+                learning_rates = [ 1e-8, 1e-7, 1e-6]
+                #epsilons = [0.4, 0.5, 0.7]
+
+            if choiceMethod =="LinearQlearning":
+                learning_rates = [ 1e-8, 1e-7,1e-6, 1e-5, 1e-4]
+
+            if choiceMethod == "SimpleDeepQlearning":
+                learning_rates = [1e-3, 1e-2, 1e-1 ]
+                gammas = [ 0.5, 0.7, 0.9]
+                epsilons = [ 0.2, 0.4, 0.5]
+  # --------------------------------------------------------------
+
+
+            params = {"QLchoiceMethod": "eGreedy",
+                      "epsilon": None,
+                      "learning_rate": None,
+                      "gamma": None}
+
+            best_params = {"QLchoiceMethod": "eGreedy",
+                           "epsilon": None,
+                           "learning_rate": None,
+                           "gamma": None}
+
+            if choiceMethod == "PolynomialQlearning":
+                params['degree']= more_params['degree']
+                best_params['degree'] = more_params['degree']
+
+            if choiceMethod == "SimpleDeepQlearning":
+                params['hidden_size']= more_params['hidden_size']
+                best_params['hidden_size'] = more_params['hidden_size']
+
+
 
             best_reward = -np.inf
             for lr in tqdm(learning_rates):
                 for eps in epsilons:
                     for g in gammas:
-                        params = {"QLchoiceMethod": "eGreedy",
-                                  "epsilon": eps,
-                                  "learning_rate": lr,
-                                  "gamma": g}
+
+                        #params = {"QLchoiceMethod": "eGreedy",
+                         #         "epsilon": eps,
+                          #        "learning_rate": lr,
+                          #        "gamma": g}
+
+                        params["epsilon"], params['learning_rate'], params['gamma'] = eps,lr,g
 
                         average_series = AverageSeriesNoTqdm(num_avg, environnement, memory, choiceMethod, params, epochs, train_list,
                                       steps=steps, display_avg=display_avg, display=display, displayItems=displayItems)
 
                         if average_series.avgLastReward > best_reward:
                             best_reward = average_series.avgLastReward
-                            best_params = {"QLchoiceMethod": "eGreedy",
-                                      "epsilon": eps,
-                                      "learning_rate": lr,
-                                      "gamma": g}
+                            best_params["epsilon"], best_params['learning_rate'], best_params['gamma'] = eps, lr, g
+
             if self.display:
                 print("******** Grid Search results : *******")
                 print("best_reward: "+str(best_reward))
@@ -72,7 +109,7 @@ class AverageSeriesNoTqdm(): #Helpful to get a better unbiased statistical estim
             print("choice method: " + choiceMethod)
             print("epochs: "+ str(epochs))
             print("Reward hyper parameters: "+ str(environnement.rewardParameters))
-            if choiceMethod == 'Qlearning' or choiceMethod == 'QlearningActionsTuples' or choiceMethod == 'LearningQlearning' :
+            if choiceMethod != "random" :
                 print(params)
 
         agent = Agent(environnement, memory, choiceMethod, params)

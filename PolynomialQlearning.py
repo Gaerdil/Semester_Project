@@ -1,6 +1,6 @@
 #In this file, we implement the Qlearning method, but using function approximation.
-#We will begin by a very simple function approximation, a linear regression to estimate
-# state - action values .
+#We will begin by a very simple function approximation, a linear regression
+#  with polynomial features to estimate  state - action values .
 # off-policy TD control
 #Mathematical understanding/formula used : we can have a look at https://towardsdatascience.com/function-approximation-in-reinforcement-learning-85a4864d566
 
@@ -9,13 +9,14 @@ import numpy as np
 
 #Same thing than the Qlearning class, but with more complex actions.
 #Indeed, before, one action was one item, now an action is a tuple (of all the recommended items).
-class LinearQlearning():
+class PolynomialQlearning():
     #items_size is the number of items, memory the "memory" hyperparameter to define the states.
-    def __init__(self, agent, N_items, Memory, N_recommended, epsilon = 0.1 ,learning_rate = 0.7, gamma = 0.3, choiceMethod = "eGreedy"):
+    def __init__(self, agent, Degree, N_items, Memory, N_recommended, epsilon = 0.1 ,learning_rate = 0.7, gamma = 0.3, choiceMethod = "eGreedy"):
         self.n_recommended = N_recommended
         self.memory = Memory
+        self.degree = Degree
         self.n_items = N_items
-        self.weights = np.random.rand(self.memory + self.n_recommended,1)  #The weights that will be used to estimate the state value
+        self.weights = np.random.rand(2+ (self.memory + self.n_recommended)*self.degree,1)  #The weights that will be used to estimate the state value
         self.n_inputs = len(self.weights)
         self.agent = agent
         self.actions, self.actions_ids = self.initActions()
@@ -28,7 +29,6 @@ class LinearQlearning():
 
 
 
-
           # For instance, Qtable[0][5][3] would allow us to get the list of values for actions, for the state [0,5,3] (if memory = 3)
 
 
@@ -36,11 +36,20 @@ class LinearQlearning():
         if train_ : #a training session : we choose the choice method specific to training sessions
             if self.choiceMethod == "eGreedy" :
                 self.chooseActionEGreedy()
+
             else:
                 print("Error : Qlearning Choice Method not recognized")
         else: #not a training session
             self.recommendation = self.chooseMaxAction(self.agent.state)[0]
         self.recommendation_id = self.actions.index(self.recommendation)
+
+
+    def polyCoordinates(self,tuple_): #With this function, we convert the states or actions in polynomial coordinates
+        polynomialTuple = [1]+tuple_[:]
+        for deg in range(2,self.degree+1):
+            for x in tuple_:
+                polynomialTuple = polynomialTuple + [x**deg]
+        return polynomialTuple
 
     def chooseActionEGreedy(self):
         self.recommendation = []
@@ -91,9 +100,11 @@ class LinearQlearning():
                     best_value = value
         return  self.actions[best_indice][:] , best_value
 
-    # In the logistic-inspired model, this is just the matrix multiplication.
+    # This is just the matrix multiplication.
     def getValue(self,state,action):
-        return np.dot(np.array(state+action), self.weights)[0]
+        poly_state = self.polyCoordinates(state)
+        poly_action = self.polyCoordinates(action)
+        return np.dot(np.array(poly_state+poly_action), self.weights)[0]
 
 
     def train(self, print_ = False):   #/!\ to update
@@ -106,7 +117,7 @@ class LinearQlearning():
         delta = self.agent.reward + self.gamma * current_state_value - last_state_value
 
         #Finally, the gradient descent update
-        self.weights = self.weights + self.lr*delta*np.array(list(self.agent.previousState) + self.recommendation).reshape(self.n_inputs,1)
+        self.weights = self.weights + self.lr*delta*np.array(self.polyCoordinates(list(self.agent.previousState)) + self.polyCoordinates(self.recommendation)).reshape(self.n_inputs,1)
 
 
 
@@ -121,9 +132,10 @@ class LinearQlearning():
         self.recommendation = []
 
     def display(self, print_actions = False):
-        print("--------------------------> Q learning (simple Linear approximation) method :")
+        print("--------------------------> Q learning (simple polynomial approximation) method :")
         print(" memory: " + str(self.memory))
         print(" number of items to recommend at each step : " + str(self.n_recommended))
+        print("Polynomial degree: "+str(self.degree))
         print(" learning rate: "+str(self.lr))
         print(" gamma: "+str(self.gamma))
         print("Weights: ")

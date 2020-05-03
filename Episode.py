@@ -33,7 +33,7 @@ class Episode():
       #  print("WWWWWW" +str(self.environnement.recommendation.choicesThisEpisode))
        # print(self.environnement.customer.choicesThisEpisode)
         self.choicesThisEpisode = self.environnement.recommendation.choicesThisEpisode[:]
-        if self.agent.choiceMethod == "QlearningActionsTuples":
+        if self.agent.choiceMethod != "random" and self.agent.choiceMethod != "Qlearning":
             self.choicesThisEpisodeActionTuples = self.agent.choicesThisEpisode[:]
         self.episodeReward = self.agent.totalReward #We will
         self.agent.endEpisode()
@@ -42,10 +42,9 @@ class Episode():
 
 
     def step(self):
-        if self.agent.choiceMethod == "QlearningActionsTuples" or self.agent.choiceMethod == "LinearQlearning":
+        if self.agent.choiceMethod != "random" and self.agent.choiceMethod != "Qlearning":
             self.agent.recommend(self.train_)
-            self.agent.recommend(self.train_)
-        elif self.agent.choiceMethod != "QlearningActionsTuples":  #/!\ temporary : all agents should in the end also only choose the actions with maw value in non train mode
+        else :  #/!\ temporary : all agents should in the end also only choose the actions with maw value in non train mode
             self.agent.recommend()
 
         reward = self.environnement.step(self.agent.recommendation)

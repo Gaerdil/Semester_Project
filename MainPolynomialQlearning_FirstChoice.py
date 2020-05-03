@@ -15,7 +15,7 @@ print("In this setting, the number of recommended items is 2. And only 2 items h
 N_items = 10
 N_recommended = 1
 memory = 1
-choiceMethod =  'LinearQlearning'
+choiceMethod =  'PolynomialQlearning'
 rewardType = 'Trust'
 behaviour = 'choiceFirst'
 rewardParameters = [1,1]
@@ -24,6 +24,7 @@ epochs = 5
 display = False
 displayItems  = False
 train_list = [True for u in range(3) ]+[ False, False ]
+more_parameters = {'degree':4}
 
 #------------- Defining the environnement  -----------
 environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , rewardParameters )
@@ -31,8 +32,8 @@ environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , r
 #>>> let's test the efficiency of our algorithm by testing with this simplified set:
 for item in environnement.items.items :
     item.cost = 1
-#environnement.items.items[2].cost =0
 environnement.items.items[7].cost =0
+#environnement.items.items[4].cost =0  #Does not grasps the complexity of this set ... and there might also be an exploration tradeoff issue
 #<<<
 
 environnement.items.display(True)
@@ -40,13 +41,14 @@ environnement.items.display(True)
 
 # >>> Grid search over the parameters to get the best parameters
 gridSearch = GridSearch()
-num_avg = 3
-_ , params = gridSearch(num_avg, environnement, memory, choiceMethod, epochs, train_list, steps=steps)
+num_avg = 4
+_ , params = gridSearch(num_avg, environnement, memory, choiceMethod, epochs, train_list, steps=steps, more_params = more_parameters)
 
 #params = {"QLchoiceMethod": "eGreedy",
  #                                "epsilon": 0.3,
   #                              "learning_rate": 0.1,
    #                              "gamma": 0.5}
+#params['epsilon'] = 0.1
 
 
 #------------ launching the episode series : Average the learning processes results   ---------------
@@ -63,6 +65,4 @@ plt.title("Average reward per serie")
 plt.show()
 #
 #
-#As expected, the linear model is not efficient... We will need to add some non linearity in order to get better results
-#Some solutions to get better results would be to have some "one hot encoding" for the inputs.
-#However, "one hot encoding" in the case of more than 1000 states/ actions, is not very desirable...
+

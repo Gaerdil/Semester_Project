@@ -1,5 +1,5 @@
 #In this file, we implement the Qlearning method, but using function approximation.
-#We will begin by a very simple function approximation, a linear regression to estimate
+#We will begin by a simple function approximation, a small neural network (one hidden layer) to estimate
 # state - action values .
 # off-policy TD control
 #Mathematical understanding/formula used : we can have a look at https://towardsdatascience.com/function-approximation-in-reinforcement-learning-85a4864d566
@@ -7,16 +7,21 @@
 import random
 import numpy as np
 
+
 #Same thing than the Qlearning class, but with more complex actions.
 #Indeed, before, one action was one item, now an action is a tuple (of all the recommended items).
-class LinearQlearning():
+class SimpleDeepQlearning():
     #items_size is the number of items, memory the "memory" hyperparameter to define the states.
-    def __init__(self, agent, N_items, Memory, N_recommended, epsilon = 0.1 ,learning_rate = 0.7, gamma = 0.3, choiceMethod = "eGreedy"):
+    def __init__(self, agent, Hidden_size, N_items, Memory, N_recommended, epsilon = 0.1 ,learning_rate = 0.7, gamma = 0.3, choiceMethod = "eGreedy"):
         self.n_recommended = N_recommended
         self.memory = Memory
         self.n_items = N_items
-        self.weights = np.random.rand(self.memory + self.n_recommended,1)  #The weights that will be used to estimate the state value
-        self.n_inputs = len(self.weights)
+        self.hidden_size = Hidden_size
+        self.n_inputs = self.memory + self.n_recommended
+        self.weights1 = np.random.normal(0,np.sqrt(2/self.n_inputs),(self.n_inputs,self.hidden_size))  #/(self.n_inputs)  #The weights that will be used to estimate the state value
+        self.weights2 = np.random.normal(0,np.sqrt(2/self.hidden_size),(self.hidden_size,1)) #/ self.hidden_size  #normalization
+        self.bias1 = np.random.rand(self.hidden_size)
+        self.bias2 = np.random.rand()
         self.agent = agent
         self.actions, self.actions_ids = self.initActions()
         self.numActions = len(self.actions_ids)
@@ -25,6 +30,7 @@ class LinearQlearning():
         self.epsilon = epsilon
         self.gamma = gamma
         self.recommendation =  [] #will be updated  (the id of the choice)
+
 
 
 
@@ -91,9 +97,13 @@ class LinearQlearning():
                     best_value = value
         return  self.actions[best_indice][:] , best_value
 
-    # In the logistic-inspired model, this is just the matrix multiplication.
+
     def getValue(self,state,action):
-        return np.dot(np.array(state+action), self.weights)[0]
+        normalized_input = np.array(state+action)/self.n_items  #Normalization step : to change in order to get something consistent with when the dataset will be updated
+        hidden_layer = relu(np.dot(normalized_input, self.weights1) + self.bias1)
+        #output_value = sigmoid(np.dot(hidden_layer, self.weights2) + self.bias2) #The sigmoid model turned out to be not working the expected way
+        output_value = np.dot(hidden_layer, self.weights2) + self.bias2
+        return output_value[0]
 
 
     def train(self, print_ = False):   #/!\ to update
@@ -105,30 +115,72 @@ class LinearQlearning():
         last_state_value = self.getValue(list(self.agent.previousState), self.recommendation)
         delta = self.agent.reward + self.gamma * current_state_value - last_state_value
 
-        #Finally, the gradient descent update
-        self.weights = self.weights + self.lr*delta*np.array(list(self.agent.previousState) + self.recommendation).reshape(self.n_inputs,1)
+        #Computing the gradients
+        grads = self.computeGrads(list(self.agent.previousState),self.recommendation, last_state_value)
 
+        # Finally, the gradient descent update
+        #self.weights1 = self.weights1 + self.lr*delta*np.array(list(self.agent.previousState) + self.recommendation).reshape(self.n_inputs,1)
+        self.weights1 = self.weights1 + self.lr * delta *grads['w1']
+        self.weights2 = self.weights2 + self.lr * delta * grads['w2']
+        self.bias1 = self.bias1 + self.lr * delta * grads['b1']
+        self.bias2 = self.bias2 + self.lr * delta * grads['b2']
 
+    def computeGrads(self,prev_state, prev_action, last_state_value):
+        X = np.array(prev_state + prev_action)/self.n_items #Normalized input
 
+        #Linear step of computing the hidden layer
+        hidden_layer_linear = np.dot(X, self.weights1) + self.bias1 #Intermediary step and useful value. Could have been kept in memory for efficiency, when we had to choose an action.
+        #non linear function activation
+        hidden_layer_activation = relu(hidden_layer_linear).reshape((self.hidden_size,1))
 
-        #prev_state_reco = self.Qtable[tuple(self.agent.previousState)][self.recommendation_id]
-        #current_state_max = self.Qtable[tuple(self.agent.state)][self.chooseMaxAction(self.agent.state, 1)][0]
-        #self.Qtable[tuple(self.agent.previousState)][self.recommendation_id] = prev_state_reco + self.lr * (self.agent.reward + self.gamma * current_state_max - prev_state_reco)
+        # bias2
+        #b2 = last_state_value*(1-last_state_value)#sigmoid model
+        b2 = 1 #non sigmoid model
+        # weight2
+        w2 = b2*hidden_layer_activation[:]
 
+        # bias1
+        #b1 = (last_state_value*(1-last_state_value)*self.weights2*((drelu(hidden_layer_linear)).reshape((self.hidden_size,1)))).reshape(self.hidden_size,)
+        b1 = b2*( self.weights2 * ((drelu(hidden_layer_linear)).reshape((self.hidden_size, 1)))).reshape(self.hidden_size, )
 
+        #weight1
+        w1 = np.dot(X.reshape((self.n_inputs, 1)),b1.reshape((1,self.hidden_size)))
+
+        return {'w1':w1,
+                'w2': w2,
+                'b1': b1,
+                'b2':b2
+                }
 
     def endEpisode(self):
         self.recommendation = []
 
     def display(self, print_actions = False):
-        print("--------------------------> Q learning (simple Linear approximation) method :")
+        print("--------------------------> Q learning (simple neural network approximation) method :")
         print(" memory: " + str(self.memory))
         print(" number of items to recommend at each step : " + str(self.n_recommended))
         print(" learning rate: "+str(self.lr))
         print(" gamma: "+str(self.gamma))
-        print("Weights: ")
-        print(self.weights)
+        print("Hidden layer size: "+str(self.hidden_size))
+        print("Hidden Weights: ")
+        print(self.weights1)
+        print("Output Weights: ")
+        print(self.weights2)
         if print_actions:
             print(self.actions)
 
 #Helper functions
+def relu(X):
+    return np.maximum(X, 0)
+
+def sigmoid(X):
+    return 1/(1+np.exp(-X))
+
+def drelu(X):
+    x = X[:]
+    x[x <= 0] = 0
+    x[x > 0] = 1
+    return x
+
+def dsigmoid(X):
+    return sigmoid(X)*(1-sigmoid(X))

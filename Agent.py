@@ -3,6 +3,8 @@ import numpy as np
 from Qlearning import *
 from QlearningActionTuples import *
 from LinearQlearning import *
+from PolynomialQlearning import *
+from SimpleDeepQlearning import *
 
 class Agent():
     def __init__(self, environnement, memory ,  choiceMethod ,  params, name = 'toto_01' ): #memory is an hyper parameter.
@@ -42,7 +44,28 @@ class Agent():
             gamma = params['gamma']
             self.Qlearning = LinearQlearning(self, self.environnement.items.n_items, memory, self.N_recommended,
                                                    epsilon, learning_rate, gamma, QLchoiceMethod)
-            #self.choicesThisEpisode = np.zeros(self.Qlearning.numActions)
+            self.choicesThisEpisode = np.zeros(self.Qlearning.numActions)
+
+        elif self.choiceMethod == 'PolynomialQlearning':
+            QLchoiceMethod = params['QLchoiceMethod']
+            epsilon = params['epsilon']
+            learning_rate = params['learning_rate']
+            gamma = params['gamma']
+            degree = params['degree']
+            self.Qlearning = PolynomialQlearning(self, degree, self.environnement.items.n_items, memory, self.N_recommended,
+                                             epsilon, learning_rate, gamma, QLchoiceMethod)
+            self.choicesThisEpisode = np.zeros(self.Qlearning.numActions)
+
+        elif self.choiceMethod == 'SimpleDeepQlearning':
+            QLchoiceMethod = params['QLchoiceMethod']
+            epsilon = params['epsilon']
+            learning_rate = params['learning_rate']
+            gamma = params['gamma']
+            hidden_size = params['hidden_size']
+            self.Qlearning = SimpleDeepQlearning(self, hidden_size, self.environnement.items.n_items, memory,
+                                                 self.N_recommended,
+                                                 epsilon, learning_rate, gamma, QLchoiceMethod)
+            self.choicesThisEpisode = np.zeros(self.Qlearning.numActions)
 
 
 
@@ -75,18 +98,15 @@ class Agent():
         elif self.choiceMethod == "Qlearning"  :
             self.Qlearning.chooseAction()
             self.recommendation = self.Qlearning.recommendation
-        elif self.choiceMethod == "QlearningActionsTuples":
+        elif self.choiceMethod in ["QlearningActionsTuples", "LinearQlearning","PolynomialQlearning", "SimpleDeepQlearning"]:
             self.Qlearning.chooseAction(train_)
             self.recommendation = self.Qlearning.recommendation
             self.choicesThisEpisode[self.Qlearning.recommendation_id] += 1
-        elif  self.choiceMethod == "LinearQlearning" :
-            self.Qlearning.chooseAction(train_)
-            self.recommendation = self.Qlearning.recommendation
         else :
-            print('Error : choiceMethod not recognized')
+            print('Error : choiceMethod not recognized in agent.recommend() function')
 
     def train(self):
-        if self.choiceMethod == 'Qlearning' or self.choiceMethod == 'QlearningActionsTuples' or self.choiceMethod == 'LinearQlearning':
+        if self.choiceMethod != 'random' :
             self.Qlearning.train()
 
     def endEpisode(self):
@@ -96,9 +116,10 @@ class Agent():
         self.previousState = []
         self.init_State()
         self.recommendation = []
-        if self.choiceMethod == 'QlearningActionsTuples' :
+        if self.choiceMethod != "random" and self.choiceMethod != "Qlearning":
             self.choicesThisEpisode = np.zeros(self.Qlearning.numActions)
-        if self.choiceMethod == 'Qlearning' or self.choiceMethod == 'QlearningActionsTuples' or self.choiceMethod == "LinearQlearning":
+            self.Qlearning.endEpisode()
+        else:
             self.Qlearning.endEpisode()
 
     def display(self):

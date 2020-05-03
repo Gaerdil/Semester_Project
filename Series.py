@@ -30,14 +30,15 @@ class AverageSeries(): #Helpful to get a better unbiased statistical estimate of
             print("choice method: " + choiceMethod)
             print("epochs: "+ str(epochs))
             print("Reward hyper parameters: "+ str(environnement.rewardParameters))
-            if choiceMethod == 'Qlearning' or choiceMethod == 'QlearningActionsTuples' :
+            if choiceMethod != "random" :
                 print(params)
+
 
         agent = Agent(environnement, memory, choiceMethod, params)
         series = Series(environnement, agent, epochs, train_list, steps, display, displayItems)
 
         self.avgRewards = np.array(series.allRewards[:])
-        if choiceMethod == "QlearningActionsTuples":
+        if choiceMethod != "random" and choiceMethod != "Qlearning" : #as Qlearning is an old version
             self.choicesLastSerieActionTuples_total = np.zeros(agent.Qlearning.numActions)
 
         for a in tqdm(range(num_avg)):
@@ -46,7 +47,7 @@ class AverageSeries(): #Helpful to get a better unbiased statistical estimate of
             series = Series(environnement, agent, epochs, train_list, steps,  display, displayItems)
             self.avgRewards =  self.avgRewards  +  np.array(series.allRewards[:])
             self.choicesLastSerie_total= self.choicesLastSerie_total + series.choicesLastSerie
-            if choiceMethod == "QlearningActionsTuples":
+            if choiceMethod != "random" and choiceMethod != "Qlearning" :
                 self.choicesLastSerieActionTuples_total = self.choicesLastSerieActionTuples_total + series.choiceslastSerieActionTuples
 
         self.avgRewards = self.avgRewards/num_avg
@@ -57,14 +58,52 @@ class AverageSeries(): #Helpful to get a better unbiased statistical estimate of
             endTime = time.time()
             print(" \n \n Execution time: "+str(endTime - startTime))
 
-            print("Qtable of the last series ------------------------------>")
-            print(agent.Qlearning.Qtable)
-            print("---------------------------------------------------->")
-            print(" ")
-            print("After the learning process : how often  is an item recommended? (total of all series) ")
-            print(self.choicesLastSerie_total)
+
             if choiceMethod == "QlearningActionsTuples":
+                print("Qtable of the last series ------------------------------>")
+                print(agent.Qlearning.Qtable)
+                print("---------------------------------------------------->")
+                print(" ")
+                print("After the learning process : how often  is an item recommended? (total of all series) ")
+                print(self.choicesLastSerie_total)
                 print("After the learning process : how often  is an Action tuple recommended? (total of all series) ")
+                print("Action list:")
+                print(agent.Qlearning.actions)
+                print("Action ids list:")
+                print(agent.Qlearning.actions_ids)
+                print("Number of time selected (per action id):")
+                print(self.choicesLastSerieActionTuples_total)
+
+            elif choiceMethod == "LinearQlearning":
+                print("Final weights: ")
+                print(agent.Qlearning.weights)
+                print("Action list:")
+                print(agent.Qlearning.actions)
+                print("Action ids list:")
+                print(agent.Qlearning.actions_ids)
+                print("Number of time selected (per action id):")
+                print(self.choicesLastSerieActionTuples_total)
+
+            elif  choiceMethod == "PolynomialQlearning":
+                print("Final weights: ")
+                print(agent.Qlearning.weights)
+                print("Action list:")
+                print(agent.Qlearning.actions)
+                print("Action ids list:")
+                print(agent.Qlearning.actions_ids)
+                print("Number of time selected (per action id):")
+                print(self.choicesLastSerieActionTuples_total)
+
+            elif choiceMethod == "SimpleDeepQlearning":
+                print(">>> Final weights: ")
+                print("Hidden weights")
+                print(agent.Qlearning.weights1)
+                print("Hidden bias")
+                print(agent.Qlearning.bias1)
+                print("Output weights")
+                print(agent.Qlearning.weights2)
+                print("Hidden bias")
+                print(agent.Qlearning.bias2)
                 print("Action list:")
                 print(agent.Qlearning.actions)
                 print("Action ids list:")
@@ -77,6 +116,9 @@ class AverageSeries(): #Helpful to get a better unbiased statistical estimate of
 class Series(): #several series, to show the whole learning/testing process
     def __init__(self, environnement, agent, epochs, train_list, steps=5,  display=True, displayItems=False):
 
+       # print("-----------BEGIN")
+       # print(agent.Qlearning.weights)
+
         if display:
             print("------------------> Series begins <------------------")
 
@@ -86,32 +128,32 @@ class Series(): #several series, to show the whole learning/testing process
            # self.allRewards = self.allRewards + serie.serieRewards[:]
             self.allRewards.append(np.mean(serie.serieRewards[:]))
         self.choicesLastSerie = serie.choicesThisSerie[:] #Equal to the choices done at the last "not training" serie (end of the learning process)
-        if agent.choiceMethod == "QlearningActionsTuples":
+        if agent.choiceMethod != "random" and agent.choiceMethod != "Qlearning":
             self.choiceslastSerieActionTuples = serie.choicesThisSerieActionTuples
 
         if display:
             print("------------------> Series ends <------------------")
-
-
+        #print("-----------END")
+        #print(agent.Qlearning.weights)
 
 
 class Serie(): #a serie is a serie of episodes with all the same train_ type (true or false).
     # train_ indicates if the agent is going to updates its Qtable during the episode (training)
-    def __init__(self, environnement, agent, epochs, steps = 5, train_ = False, display = True , displayItems  = False):
+    def __init__(self, environnement, agent, epochs, steps = 5, train_ = False, display = False , displayItems  = False):
         self.serieRewards = []
         self.choicesThisSerie = np.zeros(environnement.items.n_items)
 
         if display :
             self.display(train_)
 
-        if agent.choiceMethod == "QlearningActionsTuples":
+        if agent.choiceMethod != "random" and agent.choiceMethod != "Qlearning":
             self.choicesThisSerieActionTuples = np.zeros(agent.Qlearning.numActions)
 
         for epoch in range(epochs ):
             episode = Episode(environnement, agent, steps, train_, display, displayItems)
             self.serieRewards.append(np.mean(episode.episodeReward)) #Taking the mean should help get more consistent results
             self.choicesThisSerie = self.choicesThisSerie + episode.choicesThisEpisode
-            if agent.choiceMethod == "QlearningActionsTuples":
+            if agent.choiceMethod != "random" and agent.choiceMethod != "Qlearning":
                 self.choicesThisSerieActionTuples = self.choicesThisSerieActionTuples + episode.choicesThisEpisodeActionTuples
 
     def display(self, train_):
