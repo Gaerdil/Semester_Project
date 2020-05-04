@@ -8,45 +8,40 @@ from Series import *
 from GridSearch import *
 import matplotlib.pyplot as plt
 
-print(">>>>>>>>>>> TESTING THE AGENT : IN CASE THE CUSTOMER MAKES SIMILAR CHOICES <<<<<<<<<<<<<<<<<<")
-print("In this setting, the number of recommended items is 2. And only 2 items have a cost of 0. But the customer makes similar choices. Will the agent adapt?")
+print(">>>>>>>>>>> TESTING THE AGENT : IN CASE THE CUSTOMER ALWAYS CHOOSES ONLY  SPECIFIC ITEMS <<<<<<<<<<<<<<<<<<")
+print("In this setting, the number of recommended items is 2. And only 2 items have a cost of 0. But the customer has specific preferences. Will the agent adapt?")
 
 # ------------ Defining several parameters - others will be chosen by grid search --------------
-N_items = 4
+N_items = 10
 N_recommended = 1
 memory = 1
-choiceMethod =  'QlearningActionsTuples'
+choiceMethod =  'SimpleDeepQlearning'
 rewardType = 'Trust'
-behaviour = 'similar'
+behaviour = 'specific'
 rewardParameters = [1,1]
-steps = 10
+steps = 20
 epochs = 5
 train_list = [True for u in range(3) ]+[ False, False ]
-p = 0.8
+specific_items = [3,7]
+more_parameters = {'hidden_size': 50}
 
 #------------- Defining the environnement  -----------
-environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , rewardParameters, proba_p=p )
+environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , rewardParameters , specific_items = specific_items)
 
 #>>> let's test the efficiency of our algorithm by testing with this simplified set:
 for item in environnement.items.items :
     item.cost = 1
-environnement.items.items[2].cost =0
-environnement.items.items[1].cost =0.5
-
-environnement.items.similarities = np.array([[  -np.inf,  0.1 , 0.1, 0.8],
- [0.1,  -np.inf,  0.1, 0.8],
- [ 0.1,  0.1,  -np.inf,  0.8],
- [0.8, 0.8, 0.8 , -np.inf]])
-
+environnement.items.items[0].cost =0
+environnement.items.items[7].cost =0
 #<<<
 
-environnement.items.display(True,True)
+environnement.items.display(True)
 
 
 # >>> Grid search over the parameters to get the best parameters
 gridSearch = GridSearch()
-num_avg = 3
-_ , params = gridSearch(num_avg, environnement, memory, choiceMethod, epochs, train_list, steps=steps)
+num_avg = 5
+_ , params = gridSearch(num_avg, environnement, memory, choiceMethod, epochs, train_list, steps=steps, more_params = more_parameters)
 
 
 

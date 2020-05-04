@@ -9,8 +9,6 @@ import numpy as np
 class QlearningActionTuples():
     #items_size is the number of items, memory the "memory" hyperparameter to define the states.
     def __init__(self, agent, items_size, memory, N_recommended,epsilon = 0.1 ,learning_rate = 0.7, gamma = 0.3, choiceMethod = "eGreedy"):
-        #The number of states is here equal to items_size ** memory .
-        self.numStates = items_size**memory
         self.N_recommended = N_recommended
         self.agent = agent
         self.actions, self.actions_ids = self.initActions()

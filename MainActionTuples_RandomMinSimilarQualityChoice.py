@@ -21,8 +21,7 @@ behaviour = 'randomMinSimilarQuality'
 rewardParameters = [1,1]
 steps = 10
 epochs = 5
-display = False
-displayItems  = False
+
 train_list = [True for u in range(3) ]+[ False, False ]
 p = 0.8
 
@@ -55,8 +54,7 @@ _ , params = gridSearch(num_avg, environnement, memory, choiceMethod, epochs, tr
 #------------ launching the episode series : Average the learning processes results   ---------------
 #(less randomness in the plots), for statistical study, than the Series class
 num_avg = 5
-display_avg = True
-avgSeries = AverageSeries(num_avg, environnement, memory, choiceMethod, params, epochs, train_list, steps,display_avg , display, displayItems)
+avgSeries = AverageSeries(num_avg, environnement, memory, choiceMethod, params, epochs, train_list, steps)
 Rewards = avgSeries.avgRewards
 
 

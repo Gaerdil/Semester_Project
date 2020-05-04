@@ -8,8 +8,7 @@ class GridSearch(): #helper function for hyper parameter tuning
     def __init__(self, display = True):
         self.display = display
 
-    def __call__(self, num_avg, environnement, memory, choiceMethod, epochs, train_list, steps=5
-                     ,display_avg=False, display=False, displayItems=False , more_params = None):
+    def __call__(self, num_avg, environnement, memory, choiceMethod, epochs, train_list, steps=5, more_params = None, deepQModel =None):
 
         startTime = time.time()
 
@@ -18,6 +17,7 @@ class GridSearch(): #helper function for hyper parameter tuning
             #epsilons = [0.01, 0.05, 0.1, 0.2, 0.4]
             epsilons = [ 0.1, 0.2, 0.4]
             gammas = [0.1,0.3,0.5,0.7,0.9]
+
 
   # ----- AVOIDING NAN VALUES or Vanishing gradients ------------------------------------
             if choiceMethod == "PolynomialQlearning":
@@ -30,7 +30,12 @@ class GridSearch(): #helper function for hyper parameter tuning
             if choiceMethod == "SimpleDeepQlearning":
                 learning_rates = [1e-3, 1e-2, 1e-1 ]
                 gammas = [ 0.5, 0.7, 0.9]
-                epsilons = [ 0.2, 0.4, 0.5]
+                epsilons = [ 0.1, 0.2, 0.4]
+
+            if choiceMethod == "DeepQlearning":
+                learning_rates = [1e-3, 1e-2, 1e-1, 1, 1e1, 1e2]
+                gammas = [ 0.3, 0.5, 0.9]
+                epsilons = [0.1, 0.3, 0.5 ]
   # --------------------------------------------------------------
 
 
@@ -56,8 +61,8 @@ class GridSearch(): #helper function for hyper parameter tuning
 
             best_reward = -np.inf
             for lr in tqdm(learning_rates):
-                for eps in epsilons:
-                    for g in gammas:
+                for g in tqdm(gammas):
+                    for eps in tqdm(epsilons):
 
                         #params = {"QLchoiceMethod": "eGreedy",
                          #         "epsilon": eps,
@@ -67,25 +72,28 @@ class GridSearch(): #helper function for hyper parameter tuning
                         params["epsilon"], params['learning_rate'], params['gamma'] = eps,lr,g
 
                         average_series = AverageSeriesNoTqdm(num_avg, environnement, memory, choiceMethod, params, epochs, train_list,
-                                      steps=steps, display_avg=display_avg, display=display, displayItems=displayItems)
+                                      steps=steps, deepQModel = deepQModel)
 
                         if average_series.avgLastReward > best_reward:
                             best_reward = average_series.avgLastReward
                             best_params["epsilon"], best_params['learning_rate'], best_params['gamma'] = eps, lr, g
 
+
+            endTime = time.time()
             if self.display:
                 print("******** Grid Search results : *******")
                 print("best_reward: "+str(best_reward))
                 print("best parameters ")
                 print(best_params)
                 print("**************************************")
+                print(" \n \n Execution time of grid Search: " + str(endTime - startTime))
+
             return best_reward, best_params
         else:
             return None
 
 
-        endTime = time.time()
-        print(" \n \n Execution time of grid Search: " + str(endTime - startTime))
+
 
 
 
@@ -95,10 +103,10 @@ class GridSearch(): #helper function for hyper parameter tuning
 class AverageSeriesNoTqdm(): #Helpful to get a better unbiased statistical estimate of the efficiency of our model
     #We redo the learning process several times and average the results to reduce the amount of randomness in our results
 
-    def __init__(self, num_avg, environnement, memory, choiceMethod, params, epochs, train_list, steps=5,display_avg = True, display=True, displayItems=False):
+    def __init__(self, num_avg, environnement, memory, choiceMethod, params, epochs, train_list, steps=5,deepQModel = None, display = False):
 
         self.choicesLastSerie_total = np.zeros(environnement.items.n_items)
-        if display_avg:
+        if display:
             startTime = time.time()
             print("------------------> Average of series begins:  <------------------")
             print(str(num_avg)+" independent training/testing processes")
@@ -113,13 +121,20 @@ class AverageSeriesNoTqdm(): #Helpful to get a better unbiased statistical estim
                 print(params)
 
         agent = Agent(environnement, memory, choiceMethod, params)
-        series = Series(environnement, agent, epochs, train_list, steps, display, displayItems)
+        if choiceMethod == "DeepQlearning":
+            agent.Qlearning.setModel(copy.deepcopy(deepQModel['model']), deepQModel['trainable_layers'])
+
+        series = Series(environnement, agent, epochs, train_list, steps)
         self.avgRewards = np.array(series.allRewards[:])
 
         for a in range(num_avg):
             # We keep the exact same environnement, but reinitialize the Q-table (testing if we were just lucky in the learning process)
             agent = Agent(environnement, memory, choiceMethod, params)
-            series = Series(environnement, agent, epochs, train_list, steps,  display, displayItems)
+            # DeepQlearning setup --------------------------------------------------------------
+            if choiceMethod == "DeepQlearning":
+                agent.Qlearning.setModel(copy.deepcopy(deepQModel['model']), deepQModel['trainable_layers'])
+            # ----------------------------------------------------------------------------------
+            series = Series(environnement, agent, epochs, train_list, steps)
             self.avgRewards =  self.avgRewards  +  np.array(series.allRewards[:])
             self.choicesLastSerie_total= self.choicesLastSerie_total + series.choicesLastSerie
         self.avgRewards = self.avgRewards/num_avg

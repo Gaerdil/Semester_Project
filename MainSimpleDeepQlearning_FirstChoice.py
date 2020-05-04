@@ -21,8 +21,6 @@ behaviour = 'choiceFirst'
 rewardParameters = [1,0]
 steps = 30
 epochs = 5
-display = False
-displayItems  = False
 train_list = [True for u in range(3) ]+[ False, False ]
 more_parameters = {'hidden_size':50}
 
@@ -44,17 +42,11 @@ gridSearch = GridSearch()
 num_avg = 5
 _ , params = gridSearch(num_avg, environnement, memory, choiceMethod, epochs, train_list, steps=steps, more_params = more_parameters)
 
-#params = {"QLchoiceMethod": "eGreedy",
- #                                "epsilon": 0.3,
-  #                              "learning_rate": 0.1,
-   #                              "gamma": 0.5}
-
 
 #------------ launching the episode series : Average the learning processes results   ---------------
 #(less randomness in the plots), for statistical study, than the Series class
 num_avg = 5
-display_avg = True
-avgSeries = AverageSeries(num_avg, environnement, memory, choiceMethod, params, epochs, train_list, steps,display_avg , display, displayItems)
+avgSeries = AverageSeries(num_avg, environnement, memory, choiceMethod, params, epochs, train_list, steps)
 Rewards = avgSeries.avgRewards
 
 
@@ -64,6 +56,4 @@ plt.title("Average reward per serie")
 plt.show()
 #
 #
-#As expected, the linear model is not very efficient... We will need to add some non linearity in order to get better results
-#Some solutions to get better results would be to have some "one hot encoding" for the inputs.
-#However, "one hot encoding" in the case of more than 1000 states/ actions, is not very desirable...
+#Sometimes works a little bit. However: the model might be too simple, and there are quite some hyperparameters to change...

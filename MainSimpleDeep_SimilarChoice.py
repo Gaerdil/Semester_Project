@@ -15,14 +15,15 @@ print("In this setting, the number of recommended items is 2. And only 2 items h
 N_items = 4
 N_recommended = 1
 memory = 1
-choiceMethod =  'QlearningActionsTuples'
+choiceMethod =  'SimpleDeepQlearning'
 rewardType = 'Trust'
 behaviour = 'similar'
-rewardParameters = [1,1]
-steps = 10
+rewardParameters = [0,1]
+steps = 20
 epochs = 5
 train_list = [True for u in range(3) ]+[ False, False ]
 p = 0.8
+more_parameters = {'hidden_size':50}
 
 #------------- Defining the environnement  -----------
 environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , rewardParameters, proba_p=p )
@@ -30,13 +31,13 @@ environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , r
 #>>> let's test the efficiency of our algorithm by testing with this simplified set:
 for item in environnement.items.items :
     item.cost = 1
-environnement.items.items[2].cost =0
-environnement.items.items[1].cost =0.5
+environnement.items.items[0].cost =0
+#environnement.items.items[1].cost =0.5
 
 environnement.items.similarities = np.array([[  -np.inf,  0.1 , 0.1, 0.8],
- [0.1,  -np.inf,  0.1, 0.8],
  [ 0.1,  0.1,  -np.inf,  0.8],
- [0.8, 0.8, 0.8 , -np.inf]])
+ [0.8, 0.8, 0.8 , -np.inf],
+  [0.1, -np.inf, 0.1, 0.8] ])
 
 #<<<
 
@@ -46,7 +47,7 @@ environnement.items.display(True,True)
 # >>> Grid search over the parameters to get the best parameters
 gridSearch = GridSearch()
 num_avg = 3
-_ , params = gridSearch(num_avg, environnement, memory, choiceMethod, epochs, train_list, steps=steps)
+_ , params = gridSearch(num_avg, environnement, memory, choiceMethod, epochs, train_list, steps=steps, more_params = more_parameters)
 
 
 
