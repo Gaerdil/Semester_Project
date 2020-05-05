@@ -1,10 +1,5 @@
-from Items import *
-from Recommendation import *
-from Customer import *
+
 from Environnement import *
-from Agent import *
-from Episode import *
-from Series import *
 from GridSearch import *
 import matplotlib.pyplot as plt
 

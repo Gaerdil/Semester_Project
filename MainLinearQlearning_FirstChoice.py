@@ -1,10 +1,5 @@
-from Items import *
-from Recommendation import *
-from Customer import *
+
 from Environnement import *
-from Agent import *
-from Episode import *
-from Series import *
 from GridSearch import *
 import matplotlib.pyplot as plt
 
@@ -14,13 +9,13 @@ print("In this setting, the number of recommended items is 2. And only 2 items h
 # ------------ Defining several parameters - others will be chosen by grid search --------------
 N_items = 10
 N_recommended = 1
-memory = 1
+memory = 2
 choiceMethod =  'LinearQlearning'
 rewardType = 'Trust'
 behaviour = 'choiceFirst'
 rewardParameters = [1,1]
 steps = 10
-epochs = 5
+epochs = 4
 train_list = [True for u in range(3) ]+[ False, False ]
 
 #------------- Defining the environnement  -----------
@@ -29,8 +24,8 @@ environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , r
 #>>> let's test the efficiency of our algorithm by testing with this simplified set:
 for item in environnement.items.items :
     item.cost = 1
-#environnement.items.items[2].cost =0
 environnement.items.items[7].cost =0
+environnement.items.items[5].cost =0
 #<<<
 
 environnement.items.display(True)
@@ -60,6 +55,5 @@ plt.title("Average reward per serie")
 plt.show()
 #
 #
-#As expected, the linear model is not efficient... We will need to add some non linearity in order to get better results
-#Some solutions to get better results would be to have some "one hot encoding" for the inputs.
-#However, "one hot encoding" in the case of more than 1000 states/ actions, is not very desirable...
+#Works in simple settings, with new cost and similarity input. Does not crash anymore with 100 items and a memory of 2.
+#However, the "for loop", when looking for the maximum action, is very very long...

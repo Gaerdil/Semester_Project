@@ -1,10 +1,5 @@
-from Items import *
-from Recommendation import *
-from Customer import *
+
 from Environnement import *
-from Agent import *
-from Episode import *
-from Series import *
 from GridSearch import *
 import matplotlib.pyplot as plt
 
@@ -31,7 +26,7 @@ environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , r
 for item in environnement.items.items :
     item.cost = 1
 environnement.items.items[7].cost =0
-#environnement.items.items[4].cost =0  #Does not grasps the complexity of this set ... and there might also be an exploration tradeoff issue
+environnement.items.items[4].cost =0
 #<<<
 
 environnement.items.display(True)

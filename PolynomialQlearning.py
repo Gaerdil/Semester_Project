@@ -16,8 +16,8 @@ class PolynomialQlearning():
         self.memory = Memory
         self.degree = Degree
         self.n_items = N_items
-        self.weights = np.random.rand(2+ (self.memory + self.n_recommended)*self.degree,1)  #The weights that will be used to estimate the state value
-        self.n_inputs = len(self.weights)
+        self.n_inputs =1 + (self.memory + 2 * self.n_recommended) * self.degree
+        self.weights = np.random.rand(self.n_inputs,1)  #The weights that will be used to estimate the state value
         self.agent = agent
         self.actions, self.actions_ids = self.initActions()
         self.numActions = len(self.actions_ids)
@@ -102,9 +102,23 @@ class PolynomialQlearning():
 
     # This is just the matrix multiplication.
     def getValue(self,state,action):
-        poly_state = self.polyCoordinates(state)
-        poly_action = self.polyCoordinates(action)
-        return np.dot(np.array(poly_state+poly_action), self.weights)[0]
+        input = self.getInput(state, action)
+        poly_input = self.polyCoordinates(input)
+        return np.dot(np.array(poly_input), self.weights)[0]
+
+    def getInput(self, state, action):
+        input = []
+        #Adding costs of states in memory:
+        for item_id in state:
+            input.append(self.agent.environnement.items.items[item_id].cost)
+        # Adding costs of items of the action:
+        for item_id in action:
+            input.append(self.agent.environnement.items.items[item_id].cost)
+        #Adding similarities of the last state with all items in action
+        for item_id in action:
+            input.append(self.agent.environnement.items.similarities[state[-1]][item_id])
+        #print(state,action,  input)
+        return input
 
 
     def train(self, print_ = False):   #/!\ to update
@@ -117,7 +131,7 @@ class PolynomialQlearning():
         delta = self.agent.reward + self.gamma * current_state_value - last_state_value
 
         #Finally, the gradient descent update
-        self.weights = self.weights + self.lr*delta*np.array(self.polyCoordinates(list(self.agent.previousState)) + self.polyCoordinates(self.recommendation)).reshape(self.n_inputs,1)
+        self.weights = self.weights + self.lr*delta*np.array(self.polyCoordinates(self.getInput(list(self.agent.previousState), self.recommendation))).reshape(self.n_inputs,1)
 
 
 

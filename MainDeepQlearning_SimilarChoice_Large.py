@@ -7,27 +7,21 @@ from torch import nn
 print(">>>>>>>>>>> TESTING THE AGENT : IN CASE THE CUSTOMER ALWAYS CHOOSES THE FIRST RECOMMENDATION <<<<<<<<<<<<<<<<<<")
 
 # ------------ Defining several parameters - others will be chosen by grid search --------------
-N_items = 10
+N_items = 20
 N_recommended = 1
 memory = 1
 choiceMethod =  'DeepQlearning'
 rewardType = 'Trust'
-behaviour = 'choiceFirst'
+behaviour = 'similar'
 rewardParameters = [1,1]
 steps = 10
 epochs = 3
 train_list = [True for u in range(3) ]+[ False, False ]
-
+p = 0.6
 
 #------------- Defining the environnement  -----------
-environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , rewardParameters )
+environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , rewardParameters , p)
 
-#>>> let's test the efficiency of our algorithm by testing with this simplified set:
-for item in environnement.items.items :
-    item.cost = 1
-environnement.items.items[4].cost =0
-environnement.items.items[7].cost =0
-#<<<
 
 environnement.items.display(True)
 
@@ -56,6 +50,7 @@ print("Testing the Grid Search parameters: ")
 #------------ launching the episode series : Average the learning processes results   ---------------
 #(less randomness in the plots), for statistical study, than the Series class
 num_avg = 3
+epochs = 10
 avgSeries = AverageSeries(num_avg, environnement, memory, choiceMethod, params, epochs, train_list, steps, deepQModel)
 Rewards = avgSeries.avgRewards
 

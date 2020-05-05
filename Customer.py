@@ -106,12 +106,17 @@ class Customer():
                 self.trust_recommendation = True
                 self.choice_id = id
                 break
-
         if not self.trust_recommendation: #Choose randomly among the 2 items with best similarity
             similarities = self.items.similarities[self.choice_id]
             self.choice_id = np.random.choice(similarities.argsort()[- 3 :])   #/!\ with big lists, problems...
-            # while self.choice_id == self.previous_choice_id or self.items.similarities[self.previous_choice_id][self.choice_id] < self.p:
-            #     self.choice_id = random.choice(self.items.ids)
+            while self.choice_id == self.previous_choice_id :
+                self.choice_id = np.random.choice(similarities.argsort()[- 3 :])
+
+        # if not self.trust_recommendation: #Choose randomly among the 2 items with best similarity
+        #     similarities = self.items.similarities[self.choice_id]
+        #     self.choice_id = np.random.choice(similarities.argsort()[- 3 :])   #/!\ with big lists, problems...
+        #     # while self.choice_id == self.previous_choice_id or self.items.similarities[self.previous_choice_id][self.choice_id] < self.p:
+        #     #     self.choice_id = random.choice(self.items.ids)
 
     def choiceRandomMinSimilarQuality(self):
         b = random.random()

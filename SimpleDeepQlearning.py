@@ -17,7 +17,7 @@ class SimpleDeepQlearning():
         self.memory = Memory
         self.n_items = N_items
         self.hidden_size = Hidden_size
-        self.n_inputs = self.memory + self.n_recommended
+        self.n_inputs = self.memory + 2*self.n_recommended
         self.weights1 = np.random.normal(0,np.sqrt(2/self.n_inputs),(self.n_inputs,self.hidden_size))  #/(self.n_inputs)  #The weights that will be used to estimate the state value
         self.weights2 = np.random.normal(0,np.sqrt(2/self.hidden_size),(self.hidden_size,1)) #/ self.hidden_size  #normalization
         self.bias1 = np.random.rand(self.hidden_size)
@@ -99,11 +99,28 @@ class SimpleDeepQlearning():
 
 
     def getValue(self,state,action):
-        normalized_input = np.array(state+action)/self.n_items  #Normalization step : to change in order to get something consistent with when the dataset will be updated
-        hidden_layer = relu(np.dot(normalized_input, self.weights1) + self.bias1)
-        #output_value = sigmoid(np.dot(hidden_layer, self.weights2) + self.bias2) #The sigmoid model turned out to be not working the expected way
-        output_value = np.dot(hidden_layer, self.weights2) + self.bias2
+        input = np.array(self.getInput(state, action))
+        hidden_layer = relu(np.dot(input, self.weights1) + self.bias1)
+        output_value = sigmoid(np.dot(hidden_layer, self.weights2) + self.bias2) #The sigmoid model turned out to be not working the expected way
+        #output_value = np.dot(hidden_layer, self.weights2) + self.bias2 #non sigmoid model
+        #print(state, action,input, hidden_layer, output_value)
         return output_value[0]
+
+    # Here we "transform" the input in order to get costs and similarities, instead of item id, as an input
+    #TODO : see why the basic item_id inputs was not working at all
+    def getInput(self, state, action):
+        input = []
+        #Adding costs of states in memory:
+        for item_id in state:
+            input.append(self.agent.environnement.items.items[item_id].cost)
+        # Adding costs of items of the action:
+        for item_id in action:
+            input.append(self.agent.environnement.items.items[item_id].cost)
+        #Adding similarities of the last state with all items in action
+        for item_id in action:
+            input.append(self.agent.environnement.items.similarities[state[-1]][item_id])
+        #print(state,action,  input)
+        return input
 
 
     def train(self, print_ = False):   #/!\ to update
@@ -116,7 +133,10 @@ class SimpleDeepQlearning():
         delta = self.agent.reward + self.gamma * current_state_value - last_state_value
 
         #Computing the gradients
+        #sigmoid model
         grads = self.computeGrads(list(self.agent.previousState),self.recommendation, last_state_value)
+        #non sigmoid
+       # grads = self.computeGrads(list(self.agent.previousState), self.recommendation)
 
         # Finally, the gradient descent update
         #self.weights1 = self.weights1 + self.lr*delta*np.array(list(self.agent.previousState) + self.recommendation).reshape(self.n_inputs,1)
@@ -125,8 +145,8 @@ class SimpleDeepQlearning():
         self.bias1 = self.bias1 + self.lr * delta * grads['b1']
         self.bias2 = self.bias2 + self.lr * delta * grads['b2']
 
-    def computeGrads(self,prev_state, prev_action, last_state_value):
-        X = np.array(prev_state + prev_action)/self.n_items #Normalized input
+    def computeGrads(self,state, action, last_state_value = 0):
+        X =  np.array(self.getInput(state, action))
 
         #Linear step of computing the hidden layer
         hidden_layer_linear = np.dot(X, self.weights1) + self.bias1 #Intermediary step and useful value. Could have been kept in memory for efficiency, when we had to choose an action.
@@ -134,14 +154,14 @@ class SimpleDeepQlearning():
         hidden_layer_activation = relu(hidden_layer_linear).reshape((self.hidden_size,1))
 
         # bias2
-        #b2 = last_state_value*(1-last_state_value)#sigmoid model
-        b2 = 1 #non sigmoid model
+        b2 = last_state_value*(1-last_state_value)#sigmoid model
+        #b2 = 1 #non sigmoid model
         # weight2
         w2 = b2*hidden_layer_activation[:]
 
         # bias1
-        #b1 = (last_state_value*(1-last_state_value)*self.weights2*((drelu(hidden_layer_linear)).reshape((self.hidden_size,1)))).reshape(self.hidden_size,)
-        b1 = b2*( self.weights2 * ((drelu(hidden_layer_linear)).reshape((self.hidden_size, 1)))).reshape(self.hidden_size, )
+        b1 = (last_state_value*(1-last_state_value)*self.weights2*((drelu(hidden_layer_linear)).reshape((self.hidden_size,1)))).reshape(self.hidden_size,)
+        #b1 = b2*( self.weights2 * ((drelu(hidden_layer_linear)).reshape((self.hidden_size, 1)))).reshape(self.hidden_size, )
 
         #weight1
         w1 = np.dot(X.reshape((self.n_inputs, 1)),b1.reshape((1,self.hidden_size)))

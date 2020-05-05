@@ -20,22 +20,16 @@ class GridSearch(): #helper function for hyper parameter tuning
 
 
   # ----- AVOIDING NAN VALUES or Vanishing gradients ------------------------------------
-            if choiceMethod == "PolynomialQlearning":
-                learning_rates = [ 1e-8, 1e-7, 1e-6]
-                #epsilons = [0.4, 0.5, 0.7]
-
-            if choiceMethod =="LinearQlearning":
-                learning_rates = [ 1e-8, 1e-7,1e-6, 1e-5, 1e-4]
 
             if choiceMethod == "SimpleDeepQlearning":
-                learning_rates = [1e-3, 1e-2, 1e-1 ]
-                gammas = [ 0.5, 0.7, 0.9]
-                epsilons = [ 0.1, 0.2, 0.4]
+                learning_rates = [ 0.001, 0.01, 0.1]
+                epsilons = [0.1, 0.3]
+                gammas = [0.1,  0.5,  0.9]
 
             if choiceMethod == "DeepQlearning":
-                learning_rates = [1e-3, 1e-2, 1e-1, 1, 1e1, 1e2]
-                gammas = [ 0.3, 0.5, 0.9]
-                epsilons = [0.1, 0.3, 0.5 ]
+                learning_rates = [1e-3, 1e-2, 1e-1]
+                epsilons = [0.1,0.3]
+                gammas = [0.1,  0.5,  0.9]
   # --------------------------------------------------------------
 
 
@@ -61,8 +55,10 @@ class GridSearch(): #helper function for hyper parameter tuning
 
             best_reward = -np.inf
             for lr in tqdm(learning_rates):
-                for g in tqdm(gammas):
-                    for eps in tqdm(epsilons):
+                #for g in tqdm(gammas):
+                for g in gammas:
+                    #for eps in tqdm(epsilons):
+                    for eps in epsilons:
 
                         #params = {"QLchoiceMethod": "eGreedy",
                          #         "epsilon": eps,

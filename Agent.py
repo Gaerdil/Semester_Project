@@ -1,6 +1,3 @@
-import random
-import numpy as np
-from Qlearning import *
 from QlearningActionTuples import *
 from LinearQlearning import *
 from PolynomialQlearning import *

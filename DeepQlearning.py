@@ -7,8 +7,7 @@
 import random
 import numpy as np
 import torch
-from torch import nn
-import copy
+
 
 
 #Same thing than the Qlearning class, but with more complex actions.
@@ -19,7 +18,7 @@ class DeepQlearning():
         self.n_recommended = N_recommended
         self.memory = Memory
         self.n_items = N_items
-        self.n_inputs = self.memory + self.n_recommended
+        self.n_inputs = self.memory + 2*self.n_recommended
         self.agent = agent
         self.actions, self.actions_ids = self.initActions()
         self.numActions = len(self.actions_ids)
@@ -97,11 +96,27 @@ class DeepQlearning():
 
 
     def getValue(self,state,action):
-        input = np.array(state+action)#/self.n_items  #Normalization step : to change in order to get something consistent with when the dataset will be updated
+        input = np.array(self.getInput(state, action))#/self.n_items  #Normalization step : to change in order to get something consistent with when the dataset will be updated
         input_tensor = torch.from_numpy(input).float()
         output_value = self.model(input_tensor)
-        #print(output_value, state)
+        #print(output_value, state, action)
         return output_value.tolist()[0]
+
+        # Here we "transform" the input in order to get costs and similarities, instead of item id, as an input
+        # TODO : see why the basic item_id inputs was not working at all
+    def getInput(self, state, action):
+        input = []
+        # Adding costs of states in memory:
+        for item_id in state:
+            input.append(self.agent.environnement.items.items[item_id].cost)
+        # Adding costs of items of the action:
+        for item_id in action:
+            input.append(self.agent.environnement.items.items[item_id].cost)
+        # Adding similarities of the last state with all items in action
+        for item_id in action:
+            input.append(self.agent.environnement.items.similarities[state[-1]][item_id])
+        # print(state,action,  input)
+        return input
 
 
     def train(self):
@@ -115,7 +130,7 @@ class DeepQlearning():
         #grads = self.computeGrads(list(self.agent.previousState),self.recommendation, last_state_value)
         #grads = self.computeGrads(last_state_value)
         #grads = self.computeGrads(list(self.agent.previousState), self.recommendation)
-        X = np.array(list(self.agent.previousState)+ self.recommendation)# / self.n_items  # Normalization step : to change in order to get something consistent with when the dataset will be updated
+        X = np.array(self.getInput(list(self.agent.previousState), self.recommendation))# / self.n_items  # Normalization step : to change in order to get something consistent with when the dataset will be updated
         X_tensor = torch.from_numpy(X).float()
         y_pred = self.model(X_tensor)
         loss = self.value_loss(y_pred)
@@ -153,20 +168,7 @@ class DeepQlearning():
             #print(self.model[i].weight.data)
             #print(self.model[i].bias.data)
 
-    # TODO : Remove computeGrads as torch already takes care of it
-    #def computeGrads(self,prev_state, prev_action, last_state_value):
-     #def computeGrads(self, last_state_value):
-    def computeGrads(self, prev_state, prev_action):
-        X = np.array(prev_state + prev_action) / self.n_items  # Normalization step : to change in order to get something consistent with when the dataset will be updated
-        X_tensor = torch.from_numpy(X).float()
-        y_pred = self.model(X_tensor)
-        loss = self.value_loss(y_pred)
-        loss.backward()
 
-        grads = {}
-        #for i in self.trainable_layers:
-
-        return grads
 
     def value_loss(self,X): #This is the "loss function" used by torch to backpropagate (as X will be the score)
         return X

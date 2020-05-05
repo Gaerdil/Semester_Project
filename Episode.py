@@ -1,5 +1,3 @@
-import random
-import numpy as np
 
 class Episode():
     def __init__(self, environnement, agent, steps = 5, train_ = False, display = False, displayItems  = False):

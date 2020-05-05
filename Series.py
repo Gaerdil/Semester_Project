@@ -1,15 +1,10 @@
 # A serie is composed of several episodes
 
-import random
-import numpy as np
+
 from Episode import *
 import time
 from tqdm import tqdm
-
-
-
 from Agent import *
-import torch
 import copy
 
 
@@ -93,6 +88,7 @@ class AverageSeries(): #Helpful to get a better unbiased statistical estimate of
                 print(agent.Qlearning.actions_ids)
                 print("Number of time selected (per action id):")
                 print(self.choicesLastSerieActionTuples_total)
+                print("Most recommended action: " + str(agent.Qlearning.actions[np.argmax(np.array(self.choicesLastSerieActionTuples_total))]))
 
             elif choiceMethod == "LinearQlearning":
                 print("Final weights: ")
@@ -103,6 +99,7 @@ class AverageSeries(): #Helpful to get a better unbiased statistical estimate of
                 print(agent.Qlearning.actions_ids)
                 print("Number of time selected (per action id):")
                 print(self.choicesLastSerieActionTuples_total)
+                print("Most recommended action: "+str(agent.Qlearning.actions[np.argmax(np.array(self.choicesLastSerieActionTuples_total))]))
 
             elif  choiceMethod == "PolynomialQlearning":
                 print("Final weights: ")
@@ -113,6 +110,7 @@ class AverageSeries(): #Helpful to get a better unbiased statistical estimate of
                 print(agent.Qlearning.actions_ids)
                 print("Number of time selected (per action id):")
                 print(self.choicesLastSerieActionTuples_total)
+                print("Most recommended action: " + str(agent.Qlearning.actions[np.argmax(np.array(self.choicesLastSerieActionTuples_total))]))
 
             elif choiceMethod == "SimpleDeepQlearning":
                 print(">>> Final weights: ")
@@ -130,6 +128,7 @@ class AverageSeries(): #Helpful to get a better unbiased statistical estimate of
                 print(agent.Qlearning.actions_ids)
                 print("Number of time selected (per action id):")
                 print(self.choicesLastSerieActionTuples_total)
+                print("Most recommended action: " + str(agent.Qlearning.actions[np.argmax(np.array(self.choicesLastSerieActionTuples_total))]))
 
             elif choiceMethod == "DeepQlearning":
                 agent.Qlearning.display(True)
@@ -139,6 +138,7 @@ class AverageSeries(): #Helpful to get a better unbiased statistical estimate of
                 print(agent.Qlearning.actions_ids)
                 print("Number of time selected (per action id):")
                 print(self.choicesLastSerieActionTuples_total)
+                print("Most recommended action: " + str(agent.Qlearning.actions[np.argmax(np.array(self.choicesLastSerieActionTuples_total))]))
 
             print("------------------> Series ends <------------------")
 

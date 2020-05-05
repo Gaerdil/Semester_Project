@@ -15,8 +15,8 @@ class LinearQlearning():
         self.n_recommended = N_recommended
         self.memory = Memory
         self.n_items = N_items
-        self.weights = np.random.rand(self.memory + self.n_recommended,1)  #The weights that will be used to estimate the state value
-        self.n_inputs = len(self.weights)
+        self.n_inputs = self.memory + 2*self.n_recommended # TODO : adapt the self.n_inputs to the right value
+        self.weights = np.random.rand(self.n_inputs,1)  #The weights that will be used to estimate the state value
         self.agent = agent
         self.actions, self.actions_ids = self.initActions()
         self.numActions = len(self.actions_ids)
@@ -93,7 +93,24 @@ class LinearQlearning():
 
     # In the logistic-inspired model, this is just the matrix multiplication.
     def getValue(self,state,action):
-        return np.dot(np.array(state+action), self.weights)[0]
+        return np.dot(np.array(self.getInput(state,action)), self.weights)[0]
+
+    # Here we "transform" the input in order to get costs and similarities, instead of item id, as an input
+    #TODO : see why the basic item_id inputs was not working at all
+    def getInput(self, state, action):
+        input = []
+        #Adding costs of states in memory:
+        for item_id in state:
+            input.append(self.agent.environnement.items.items[item_id].cost)
+        # Adding costs of items of the action:
+        for item_id in action:
+            input.append(self.agent.environnement.items.items[item_id].cost)
+        #Adding similarities of the last state with all items in action
+        for item_id in action:
+            input.append(self.agent.environnement.items.similarities[state[-1]][item_id])
+        #print(state,action,  input)
+        return input
+
 
 
     def train(self, print_ = False):   #/!\ to update
@@ -106,7 +123,7 @@ class LinearQlearning():
         delta = self.agent.reward + self.gamma * current_state_value - last_state_value
 
         #Finally, the gradient descent update
-        self.weights = self.weights + self.lr*delta*np.array(list(self.agent.previousState) + self.recommendation).reshape(self.n_inputs,1)
+        self.weights = self.weights + self.lr*delta*np.array(self.getInput(list(self.agent.previousState), self.recommendation)).reshape(self.n_inputs,1)
 
 
 

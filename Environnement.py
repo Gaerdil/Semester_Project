@@ -1,4 +1,3 @@
-import random
 from Items import *
 from Recommendation import *
 from Customer import *
