@@ -11,7 +11,7 @@ import copy
 class AverageSeries(): #Helpful to get a better unbiased statistical estimate of the efficiency of our model
     #We redo the learning process several times and average the results to reduce the amount of randomness in our results
 
-    def __init__(self, num_avg, environnement, memory, choiceMethod, params, epochs, train_list, steps=5,deepQModel = None, display=True ):
+    def __init__(self, num_avg, environnement, memory, choiceMethod, params, epochs, train_list, steps=5,deepQModel = None, display=True  ):
 
         self.choicesLastSerie_total = np.zeros(environnement.items.n_items)
 
@@ -31,8 +31,10 @@ class AverageSeries(): #Helpful to get a better unbiased statistical estimate of
 
 
         agent = Agent(environnement, memory, choiceMethod, params)
+        #if enableDebug : #It means that we want to visualize the actions for the DeepQlearningFaster model:
+         #   agent.Qlearning.setDebugMode()
 
-        if choiceMethod == "DeepQlearning":
+        if choiceMethod == "DeepQlearning" or choiceMethod == "DeepQlearningFaster":
             agent.Qlearning.setModel(copy.deepcopy(deepQModel['model']), deepQModel['trainable_layers'])
 
 
@@ -50,7 +52,7 @@ class AverageSeries(): #Helpful to get a better unbiased statistical estimate of
             agent = Agent(environnement, memory, choiceMethod, params)
 
             #DeepQlearning setup --------------------------------------------------------------
-            if choiceMethod == "DeepQlearning":
+            if choiceMethod == "DeepQlearning" or choiceMethod == "DeepQlearningFaster" :
                 agent.Qlearning.setModel(copy.deepcopy(deepQModel['model']), deepQModel['trainable_layers'])
             #----------------------------------------------------------------------------------
             #print("-------------------- BEFORE ----------------------------------")
@@ -130,7 +132,7 @@ class AverageSeries(): #Helpful to get a better unbiased statistical estimate of
                 print(self.choicesLastSerieActionTuples_total)
                 print("Most recommended action: " + str(agent.Qlearning.actions[np.argmax(np.array(self.choicesLastSerieActionTuples_total))]))
 
-            elif choiceMethod == "DeepQlearning":
+            elif choiceMethod == "DeepQlearning" :
                 agent.Qlearning.display(True)
                 print("Action list:")
                 print(agent.Qlearning.actions)
@@ -140,6 +142,19 @@ class AverageSeries(): #Helpful to get a better unbiased statistical estimate of
                 print(self.choicesLastSerieActionTuples_total)
                 print("Most recommended action: " + str(agent.Qlearning.actions[np.argmax(np.array(self.choicesLastSerieActionTuples_total))]))
 
+            elif  choiceMethod == "DeepQlearningFaster":
+                agent.Qlearning.display(True)
+                if agent.Qlearning.debug:
+                    print("Action list:")
+                    print(agent.Qlearning.actions)
+                    print("Action ids list:")
+                    print(agent.Qlearning.actions_ids)
+                    print("Number of time selected (per action id):")
+                    print(self.choicesLastSerieActionTuples_total)
+                    print("Most recommended action: " + str(agent.Qlearning.actions[np.argmax(np.array(self.choicesLastSerieActionTuples_total))]))
+                else:
+                    print("Not in debug mode ")
+                    #print("Number of steps in the last serie, per parallel process: "+str(self.choicesLastSerieActionTuples_total/num_avg))
             print("------------------> Series ends <------------------")
 
 class Series(): #several series, to show the whole learning/testing process

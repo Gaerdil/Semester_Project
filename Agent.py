@@ -3,6 +3,7 @@ from LinearQlearning import *
 from PolynomialQlearning import *
 from SimpleDeepQlearning import *
 from DeepQlearning import *
+from DeepQlearningFaster import *
 
 class Agent():
     def __init__(self, environnement, memory ,  choiceMethod ,  params, name = 'toto_01' ): #memory is an hyper parameter.
@@ -75,6 +76,20 @@ class Agent():
                                                  epsilon, learning_rate, gamma, QLchoiceMethod)
             self.choicesThisEpisode = np.zeros(self.Qlearning.numActions)
 
+        elif self.choiceMethod == 'DeepQlearningFaster':
+            QLchoiceMethod = params['QLchoiceMethod']
+            epsilon = params['epsilon']
+            learning_rate = params['learning_rate']
+            gamma = params['gamma']
+            debug = params['debug']
+            subset_size = params['subset_size']
+
+            self.Qlearning = DeepQlearningFaster(self,  self.environnement.items.n_items, memory,
+                                                 self.N_recommended,subset_size,
+                                                 epsilon, learning_rate, gamma, QLchoiceMethod, debug = debug)
+
+            self.choicesThisEpisode = np.zeros(self.Qlearning.numActions)
+
 
 
     def init_State(self): #In order to still be able to make a recommendation at the begining (when the customer made no choice yet)
@@ -106,7 +121,7 @@ class Agent():
         elif self.choiceMethod == "Qlearning"  :
             self.Qlearning.chooseAction()
             self.recommendation = self.Qlearning.recommendation
-        elif self.choiceMethod in ["QlearningActionsTuples", "LinearQlearning","PolynomialQlearning", "SimpleDeepQlearning", "DeepQlearning"]:
+        elif self.choiceMethod in ["QlearningActionsTuples", "LinearQlearning","PolynomialQlearning", "SimpleDeepQlearning", "DeepQlearning","DeepQlearningFaster"]:
             self.Qlearning.chooseAction(train_)
             self.recommendation = self.Qlearning.recommendation
             self.choicesThisEpisode[self.Qlearning.recommendation_id] += 1

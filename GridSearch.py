@@ -26,7 +26,7 @@ class GridSearch(): #helper function for hyper parameter tuning
                 epsilons = [0.1, 0.3]
                 gammas = [0.1,  0.5,  0.9]
 
-            if choiceMethod == "DeepQlearning":
+            if choiceMethod == "DeepQlearning" or choiceMethod == "DeepQlearningFaster":
                 learning_rates = [1e-3, 1e-2, 1e-1]
                 epsilons = [0.1,0.3]
                 gammas = [0.1,  0.5,  0.9]
@@ -47,10 +47,15 @@ class GridSearch(): #helper function for hyper parameter tuning
                 params['degree']= more_params['degree']
                 best_params['degree'] = more_params['degree']
 
-            if choiceMethod == "SimpleDeepQlearning":
+            if choiceMethod == "SimpleDeepQlearning" :
                 params['hidden_size']= more_params['hidden_size']
                 best_params['hidden_size'] = more_params['hidden_size']
 
+            if choiceMethod == "DeepQlearningFaster":
+                params['subset_size'] = more_params['subset_size']
+                best_params['subset_size'] = more_params['subset_size']
+                params['debug'] = more_params['debug']
+                best_params['debug'] = more_params['debug']
 
 
             best_reward = -np.inf
@@ -117,7 +122,7 @@ class AverageSeriesNoTqdm(): #Helpful to get a better unbiased statistical estim
                 print(params)
 
         agent = Agent(environnement, memory, choiceMethod, params)
-        if choiceMethod == "DeepQlearning":
+        if choiceMethod == "DeepQlearning" or choiceMethod == "DeepQlearningFaster":
             agent.Qlearning.setModel(copy.deepcopy(deepQModel['model']), deepQModel['trainable_layers'])
 
         series = Series(environnement, agent, epochs, train_list, steps)
@@ -127,7 +132,7 @@ class AverageSeriesNoTqdm(): #Helpful to get a better unbiased statistical estim
             # We keep the exact same environnement, but reinitialize the Q-table (testing if we were just lucky in the learning process)
             agent = Agent(environnement, memory, choiceMethod, params)
             # DeepQlearning setup --------------------------------------------------------------
-            if choiceMethod == "DeepQlearning":
+            if choiceMethod == "DeepQlearning" or choiceMethod == "DeepQlearningFaster":
                 agent.Qlearning.setModel(copy.deepcopy(deepQModel['model']), deepQModel['trainable_layers'])
             # ----------------------------------------------------------------------------------
             series = Series(environnement, agent, epochs, train_list, steps)

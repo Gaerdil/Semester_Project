@@ -7,22 +7,23 @@ from torch import nn
 print(">>>>>>>>>>> TESTING THE AGENT : IN CASE THE CUSTOMER ALWAYS CHOOSES THE FIRST RECOMMENDATION <<<<<<<<<<<<<<<<<<")
 
 # ------------ Defining several parameters - others will be chosen by grid search --------------
-N_items = 100
-N_recommended = 1
-memory = 1
-choiceMethod =  'DeepQlearning'
+N_items = 10000
+N_recommended = 3
+memory = 2
+choiceMethod =  'DeepQlearningFaster'
 rewardType = 'Trust'
-behaviour = 'similar'
+behaviour = 'choiceFirst'
 rewardParameters = [1,1]
 steps = 10
 epochs = 3
 train_list = [True for u in range(3) ]+[ False, False ]
+more_params = {'debug' : False, 'subset_size':10}
 
 #------------- Defining the environnement  -----------
 environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , rewardParameters )
 
 
-environnement.items.display(True)
+#environnement.items.display(True)
 
 
 #Create model
@@ -42,7 +43,7 @@ deepQModel = {'model': model, 'trainable_layers': trainable_layers}
 # >>> Grid search over the parameters to get the best parameters
 gridSearch = GridSearch()
 num_avg = 3
-_ , params = gridSearch(num_avg, environnement, memory, choiceMethod, epochs, train_list, steps=steps, more_params = None, deepQModel=deepQModel)
+_ , params = gridSearch(num_avg, environnement, memory, choiceMethod, epochs, train_list, steps=steps, more_params = more_params, deepQModel=deepQModel)
 
 print("Testing the Grid Search parameters: ")
 
