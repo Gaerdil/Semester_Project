@@ -47,7 +47,7 @@ class AverageSeries(): #Helpful to get a better unbiased statistical estimate of
         if choiceMethod != "random" and choiceMethod != "Qlearning" : #as Qlearning is an old version
             self.choicesLastSerieActionTuples_total = np.zeros(agent.Qlearning.numActions)
 
-        for a in tqdm(range(num_avg)):
+        for a in tqdm(range(num_avg - 1)):
             # We keep the exact same environnement, but reinitialize the Q-table (testing if we were just lucky in the learning process)
             agent = Agent(environnement, memory, choiceMethod, params)
 
@@ -70,6 +70,7 @@ class AverageSeries(): #Helpful to get a better unbiased statistical estimate of
         self.avgRewards = self.avgRewards/num_avg
         self.avgLastReward = self.avgRewards[-1]
 
+        #print("steps "+str(steps)+" AVGSerieS-reward " + str(self.avgRewards) )
 
         if display:
             endTime = time.time()
@@ -175,7 +176,9 @@ class Series(): #several series, to show the whole learning/testing process
         if agent.choiceMethod != "random" and agent.choiceMethod != "Qlearning":
             self.choiceslastSerieActionTuples = serie.choicesThisSerieActionTuples
 
+        #print("steps " + str(steps) + " SerieS-reward " + str(self.allRewards))
         if display:
+
             print("------------------> Series ends <------------------")
         #print("-----------END")
         #print(agent.Qlearning.weights)
@@ -183,7 +186,7 @@ class Series(): #several series, to show the whole learning/testing process
 
 class Serie(): #a serie is a serie of episodes with all the same train_ type (true or false).
     # train_ indicates if the agent is going to updates its Qtable during the episode (training)
-    def __init__(self, environnement, agent, epochs, steps = 5, train_ = False, display = False ):
+    def __init__(self, environnement, agent, epochs, steps = 10, train_ = False, display = False ):
         self.serieRewards = []
         self.choicesThisSerie = np.zeros(environnement.items.n_items)
 
@@ -199,6 +202,8 @@ class Serie(): #a serie is a serie of episodes with all the same train_ type (tr
             self.choicesThisSerie = self.choicesThisSerie + episode.choicesThisEpisode
             if agent.choiceMethod != "random" and agent.choiceMethod != "Qlearning":
                 self.choicesThisSerieActionTuples = self.choicesThisSerieActionTuples + episode.choicesThisEpisodeActionTuples
+
+        #print("steps "+str(steps)+" Serie-reward "+str(self.serieRewards))
 
     def display(self, train_):
         print("------------------> Serie begins")
