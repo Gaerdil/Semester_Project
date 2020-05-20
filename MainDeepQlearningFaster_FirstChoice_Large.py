@@ -61,3 +61,4 @@ plt.title("Average reward per serie")
 plt.show()
 #
 #
+#As it is an approximate function : it does not work as well as it should...

@@ -2,6 +2,7 @@
 #Just the list of items, with similarities and cost
 import numpy as np
 import random
+from tqdm import *
 
 class Items(): #part of the environnement directly dealing with items (database, costs, similariries)
     def __init__(self, N_items):
@@ -17,14 +18,16 @@ class Items(): #part of the environnement directly dealing with items (database,
 
 
 
+
     def createItems(self):
         for i in range(self.n_items):
             item = Item(i,random.randint(3,9))
             self.items.append(item)
             self.ids.append(i)
 
+
     def computeSimilarities(self):
-        for i in range(self.n_items):
+        for i in tqdm(range(self.n_items)):
             for j in range(self.n_items):
                 if i==j:
                     self.similarities[i][j]=1
@@ -57,7 +60,7 @@ class Item(): #a single item of the items database
 
         if binary: #cached = 0, not cached = 1
             # Parameter can be changed (proportion of cached content)
-            self.cost = random.choice([0,1,1,1,1])
+            self.cost = int(np.random.choice([0,1], p = [0.05,0.95])) #Only a minority of items is cached
         elif binary == False: #real numbers for costs
             self.cost = 100*random.random()
 

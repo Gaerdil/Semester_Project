@@ -5,7 +5,7 @@ import random
 import numpy as np
 
 class Customer():
-    def __init__(self, items, recommendation, behaviour = 'random' , p = 0.7, specific_items = None): #p is the probability to trust
+    def __init__(self, items, recommendation, behaviour = 'random' , p_or_minSum = 0.7, specific_items = None): #p is the probability to trust
         #The customer has this way a direct access to
         self.items = items
         self.recommendation = recommendation
@@ -23,7 +23,17 @@ class Customer():
 
         self.trust_recommendation = False #If trust recommendations, this will be updated to True
         self.behaviour = behaviour
-        self.p = p
+
+        if self.behaviour == 'similarWithSubset':
+            self.min_similarity_sum = p_or_minSum #in this case, the p_or_minSum variable can be any real number
+
+        else:
+            self.p = p_or_minSum
+            #Here p is a probability that has to be between 0 and 1 ... the lines below are ensuring that
+            if self.p <0 :
+                self.p =0
+            elif self.p >1 :
+                self.p = 1
 
         #List used for debugging
         self.choicesThisEpisode = np.zeros(self.items.n_items)
@@ -43,6 +53,9 @@ class Customer():
 
         elif self.behaviour == "randomMinSimilarQuality":
             self.choiceRandomMinSimilarQuality()
+
+        elif self.behaviour == "similarWithSubset":
+            self.choiceSimilarWithSubset()
 
         else:
             print("Error: no choice method indicated")
@@ -134,8 +147,40 @@ class Customer():
                 self.choice_id = random.choice(self.items.ids)
 
 
+    def choiceSimilarWithSubset(self): #This user behaviour will be usable with the deep learning "faster" method
+        #Contrary to "Similar" user, it is scalable to huge catalogs of items
+        recommendation_similarities = [self.items.similarities[id][self.choice_id] for id in self.recommendation.recommended_items ]
+        recommendation_similarities_sum = np.sum(np.array(recommendation_similarities))
+        #print(self.min_similarity_sum, recommendation_similarities_sum)
+        #TODO : set this to mean instead later maybe?
+        if self.min_similarity_sum <= recommendation_similarities_sum :
+            #The recommendation is globally good enough:
+            self.trust_recommendation = True #We will pick an item into the recommendations
+            self.choice_id = int(np.random.choice(self.recommendation.recommended_items, 1, p =softmaxOfSims(recommendation_similarities)))
+            #We will pick this item with the similarities as the probabilities (with softmax transformation)
+
+        else:
+            self.trust_recommendation = False
+            self.previous_choice_id = self.choice_id
+
+    #To adapt to huge dataset, we will take the best option out of a subset of items
+    #Indeed, this is more realistic: a user would not see all of the descriptions of the items  in youtube before making a choice.
+    #The user would rather have a look at a smaller subset and make a choice within this smaller subset
+            random_subset = np.random.choice(self.items.ids, min(self.items.n_items, 10), replace=False) #Random item ids
+            #TODO : change the random subset size later
+            random_subset_similarities = np.array([self.items.similarities[id][self.choice_id] for id in random_subset]) #The similarities of the random items ids
+            while self.previous_choice_id == self.choice_id:  # To ensure we wont take two time the same item
+                random_item_sim = np.random.choice(random_subset_similarities.argsort()[- 3:])
+                self.choice_id =  int(random_subset[random_item_sim])
+        #We randomly took one of the 3 items with the best similarity, in the random subset of items
 
 
+#helper function :
+
+def softmaxOfSims(similarities): #to change similarities into probabilities
+    np_sims = np.array(similarities)
+    exponential_similarities = np.exp(np_sims)
+    return list(exponential_similarities/np.sum(exponential_similarities))
 
 
 

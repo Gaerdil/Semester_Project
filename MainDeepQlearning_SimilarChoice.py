@@ -26,6 +26,8 @@ environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , r
 for item in environnement.items.items :
     item.cost = 1
 environnement.items.items[1].cost =0
+environnement.items.items[3].cost =0
+#In optimal setting, should exchange between items 1 and 3
 
 environnement.items.similarities = np.array([[  -np.inf,  0.1 , 0.1, 0.8],
 [0.1, -np.inf, 0.1, 0.8],

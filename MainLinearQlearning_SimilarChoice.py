@@ -17,7 +17,7 @@ rewardParameters = [1,1]
 steps = 20
 epochs = 3
 train_list = [True for u in range(3) ]+[ False, False ]
-p = 0.8
+p = 0.7
 
 
 #------------- Defining the environnement  -----------
@@ -27,6 +27,7 @@ environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , r
 for item in environnement.items.items :
     item.cost = 1
 environnement.items.items[1].cost =0
+environnement.items.items[3].cost =0
 #environnement.items.items[1].cost =0.5
 
 environnement.items.similarities = np.array([[  -np.inf,  0.1 , 0.1, 0.8],
@@ -60,4 +61,4 @@ plt.title("Average reward per serie")
 plt.show()
 #
 #
-#Works for small settings...
+#Success ! Reward often of 20, the max available reward...

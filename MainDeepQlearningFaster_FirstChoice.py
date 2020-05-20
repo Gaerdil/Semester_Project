@@ -66,3 +66,8 @@ plt.title("Average reward per serie")
 plt.show()
 #
 #
+
+
+#Reward in the end = number of steps --> optimal policy found
+#With approximation, we only often get to 7 instead of 10  (the number of steps) here ... but with more training it should be good
+#The "Faster" approximation is less precise, but more scalable.

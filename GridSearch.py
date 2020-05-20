@@ -8,6 +8,7 @@ class GridSearch(): #helper function for hyper parameter tuning
     def __init__(self, display = True):
         self.display = display
 
+
     def __call__(self, num_avg, environnement, memory, choiceMethod, epochs, train_list, steps=5, more_params = None, deepQModel =None):
 
         startTime = time.time()

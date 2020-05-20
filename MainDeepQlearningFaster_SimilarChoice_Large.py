@@ -4,10 +4,10 @@ from GridSearch import *
 import matplotlib.pyplot as plt
 from torch import nn
 
-print(">>>>>>>>>>> TESTING THE AGENT : IN CASE THE CUSTOMER ALWAYS CHOOSES THE FIRST RECOMMENDATION <<<<<<<<<<<<<<<<<<")
+print(">>>>>>>>>>> TESTING THE AGENT : Similar choice - Large dataset <<<<<<<<<<<<<<<<<<")
 
 # ------------ Defining several parameters - others will be chosen by grid search --------------
-N_items = 1000
+N_items = 100 #/!\ With "Similar" user, it would be too long to get more items...
 N_recommended = 1
 memory = 1
 choiceMethod =  'DeepQlearningFaster'
@@ -17,7 +17,7 @@ rewardParameters = [1,1]
 steps = 10
 epochs = 3
 train_list = [True for u in range(3) ]+[ False, False ]
-more_params = {'debug' : False, 'subset_size':10}
+more_params = {'debug' : False, 'subset_size':30}
 
 #------------- Defining the environnement  -----------
 environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , rewardParameters )

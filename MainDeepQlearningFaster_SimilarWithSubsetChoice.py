@@ -4,29 +4,28 @@ from GridSearch import *
 import matplotlib.pyplot as plt
 from torch import nn
 
-print(">>>>>>>>>>> TESTING THE AGENT : Similar choice <<<<<<<<<<<<<<<<<<")
-
+print(">>>>>>>>>>> TESTING THE AGENT : Similar with subset choice <<<<<<<<<<<<<<<<<<")
+#/!\ Working very badly with this user on a small dataset
 # ------------ Defining several parameters - others will be chosen by grid search --------------
 N_items = 4
-N_recommended = 1
+N_recommended = 2
 memory = 1
 choiceMethod =  'DeepQlearningFaster'
 rewardType = 'Trust'
-behaviour = 'similar'
+behaviour = 'similarWithSubset'
 rewardParameters = [1,1]
 steps = 10
 epochs = 3
 train_list = [True for u in range(3) ]+[ False, False ]
 more_params = {'debug' : True, 'subset_size':4} #Here, the subset will exactly be the number of available actions
-
+min_similarities_sum = 1
 #------------- Defining the environnement  -----------
-environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , rewardParameters )
+environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , rewardParameters , proba_p=min_similarities_sum) #Here the proba_p parameter is not necessarly a probability
 
 #>>> let's test the efficiency of our algorithm by testing with this simplified set:
 for item in environnement.items.items :
     item.cost = 1
 environnement.items.items[1].cost =0
-
 
 environnement.items.similarities = np.array([[  -np.inf,  0.1 , 0.1, 0.8],
 [0.1, -np.inf, 0.1, 0.8],
@@ -72,3 +71,4 @@ plt.title("Average reward per serie")
 plt.show()
 #
 #
+#Not working well

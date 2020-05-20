@@ -1,6 +1,6 @@
 
 class Episode():
-    def __init__(self, environnement, agent, steps = 5, train_ = False, display = False, displayItems  = False):
+    def __init__(self, environnement, agent, steps = 10, train_ = False, display = False, displayItems  = False):
         self.environnement = environnement
         self.agent = agent
         self.train_ = train_
