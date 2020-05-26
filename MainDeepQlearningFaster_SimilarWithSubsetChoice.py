@@ -38,16 +38,14 @@ environnement.items.display(True)
 
 
 #Create model
-model = nn.Sequential(
-    nn.Linear(memory+2*N_recommended, 20),
-    nn.SELU(),
-    nn.Linear(20, 5),
-    nn.SELU(),
-    nn.Linear(5, 1),
-    nn.Sigmoid()
 
+model = nn.Sequential(
+    nn.Linear(memory+2*N_recommended, 10),
+    nn.SELU(),
+    nn.Linear(10, 1)
 )
-trainable_layers = [0,2,4]
+
+trainable_layers = [0,2]
 
 deepQModel = {'model': model, 'trainable_layers': trainable_layers}
 
@@ -71,4 +69,4 @@ plt.title("Average reward per serie")
 plt.show()
 #
 #
-#Not working well
+#Not working well because the probability sum is never high enough...

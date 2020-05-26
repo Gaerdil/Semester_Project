@@ -18,7 +18,7 @@ steps = 10
 epochs = 3
 train_list = [True for u in range(3) ]+[ False, False ]
 more_params = {'debug' : False, 'subset_size':30}
-min_similarities_sum = N_recommended/2 #TODO : explore / change this user behaviour accordingly
+min_similarities_sum = N_recommended/3 #TODO : explore / change this user behaviour accordingly
 #------------- Defining the environnement  -----------
 print("--> creating environnement")
 environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , rewardParameters , proba_p=min_similarities_sum )
@@ -28,16 +28,25 @@ environnement = Environnement(N_items, N_recommended, behaviour,  rewardType , r
 
 
 #Create model
-model = nn.Sequential(
-    nn.Linear(memory+2*N_recommended, 20),
-    nn.SELU(),
-    nn.Linear(20, 5),
-    nn.SELU(),
-    nn.Linear(5, 1),
-    nn.Sigmoid()
+# model = nn.Sequential(
+#     nn.Linear(memory+2*N_recommended, 20),
+#     nn.SELU(),
+#     nn.Linear(20, 5),
+#     nn.SELU(),
+#     nn.Linear(5, 1),
+#     nn.Sigmoid()
+#
+# )
+# trainable_layers = [0,2,4]
 
+
+model = nn.Sequential(
+    nn.Linear(memory+2*N_recommended, 10),
+    nn.SELU(),
+    nn.Linear(10, 1)
 )
-trainable_layers = [0,2,4]
+
+trainable_layers = [0,2]
 
 deepQModel = {'model': model, 'trainable_layers': trainable_layers}
 

@@ -95,14 +95,34 @@ class DeepQlearningFaster():
         actions = computeActions(self.n_recommended,[[i] for i in self.agent.environnement.items.ids] )
         return (actions,[i for i in range(len(actions))])
 
+
+
 #Helper function to pick the predefined subset of actions in the action space. No need for computing in advance the actions!
     def pickActionsSubset(self, current_item): #create a predifined subset of possible actions
         self.subset = [] #No action in the subset
-        while len(self.subset) < self.subset_size:
-            action = np.random.choice(self.agent.environnement.items.ids,self.n_recommended,replace=False)#replece : never two times the same item in same recommendation
-            while current_item in action: #/!\ not propose the currently watched item...
-                action = np.random.choice(self.agent.environnement.items.ids,self.n_recommended, replace=False)  # replece : never two times the same item in same recommendation
-            self.subset.append(list(action[:]))
+
+        #Case 1 : there are exactly or less than n_recommended cached items (the current item can be one of them):
+        if self.agent.environnement.items.number_of_cached_items <= self.n_recommended :
+            action = [i for i in self.agent.environnement.items.cached_items_ids if i != current_item]
+            action_2ndPart = np.random.choice(self.agent.environnement.items.ids,self.n_recommended - len(action), replace=False)
+            while current_item in action_2ndPart :
+                action_2ndPart = np.random.choice(self.agent.environnement.items.ids, self.n_recommended - len(action),replace=False)
+            action = action + list(action_2ndPart)
+            self.subset.append(action[:])
+            while len(self.subset) < self.subset_size:
+                action = np.random.choice(self.agent.environnement.items.ids,self.n_recommended,replace=False)#replece : never two times the same item in same recommendation
+                while current_item in action: #/!\ not propose the currently watched item...
+                    action = np.random.choice(self.agent.environnement.items.ids,self.n_recommended, replace=False)  # replece : never two times the same item in same recommendation
+                self.subset.append(list(action[:]))
+
+
+        #Case 2 : we have enough items in the cached items (We might end up with repetitions though)
+        else:
+            while len(self.subset) < self.subset_size:
+                action = np.random.choice(self.agent.environnement.items.cached_items_ids,self.n_recommended,replace=False)#replece : never two times the same item in same recommendation
+                while current_item in action: #/!\ not propose the currently watched item...
+                    action = np.random.choice(self.agent.environnement.items.cached_items_ids,self.n_recommended, replace=False)  # replece : never two times the same item in same recommendation
+                self.subset.append(list(action[:]))
        # print(self.subset, current_item)
 
     #---- THE ONLY PLACE WHERE DeepQlearning and DeepQlearningFaster are different-----
