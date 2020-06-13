@@ -10,11 +10,12 @@ import torch
 
 
 
+
 #Same thing than the Qlearning class, but with more complex actions.
 #Indeed, before, one action was one item, now an action is a tuple (of all the recommended items).
 class DeepQlearning():
     #items_size is the number of items, memory the "memory" hyperparameter to define the states.
-    def __init__(self, agent,  N_items, Memory, N_recommended, epsilon = 0.1 ,learning_rate = 0.7, gamma = 0.3, choiceMethod = "eGreedy"):
+    def __init__(self, agent,  N_items, Memory, N_recommended, epsilon = 0.1 ,learning_rate = 0.7, gamma = 0.3, choiceMethod = "eGreedy", optimize_time = True):
         self.n_recommended = N_recommended
         self.memory = Memory
         self.n_items = N_items
@@ -27,6 +28,13 @@ class DeepQlearning():
         self.epsilon = epsilon
         self.gamma = gamma
         self.recommendation =  [] #will be updated  (the id of the choice)
+
+        # Last minute upgrade to optimize computation time
+        self.last_5_states = None
+        self.last_5_states_values = None
+        if optimize_time:
+            self.last_5_states = [] #In this list is kept the 5 last visited items
+            self.last_5_states_values = []  #In this list is kept the values of the 5 last visited items
 
 
     def setModel(self, Model,Trainable_layers): #A separate step, so that we can have the input size from the Qlearning __init__
@@ -85,6 +93,8 @@ class DeepQlearning():
         current_item = self.agent.environnement.customer.choice_id
         best_indice = None
         best_value = -np.inf
+
+
         for i in self.actions_ids:
             action = self.actions[i][:]
             if current_item not in action:
@@ -119,18 +129,34 @@ class DeepQlearning():
         return input
 
 
+    def getStateOnlyValue(self, state): # Helper function to diminish the training time .
+        #Indeed, we will use self.values_of_last_5_states to avoid a few for loops
+        #The randomness with 0.7 ensures that the state value is often upgraded.
+        #Note that this value can be changed
+        if random.random() < 0.7 and str(state) in self.last_5_states :
+            state_value =  self.last_5_states_values[self.last_5_states.index(str(state))]
+        else :
+            state_value = self.chooseMaxAction(self.agent.state)[1]
+        return state_value
+
+
     def train(self):
 
         #The TD error
-        current_state_value = self.chooseMaxAction(self.agent.state)[1]
+        #current_state_value = self.chooseMaxAction(self.agent.state)[1]
+        current_state_value = self.getStateOnlyValue(self.agent.state)
+        if self.last_5_states != None: #
+            self.last_5_states.append(self.agent.state)
+            self.last_5_states_values.append(current_state_value)
+            if len(self.last_5_states) >= 5 :
+                self.last_5_states_values.pop(0)
+                self.last_5_states.pop(0)
+
         last_state_value = self.getValue(list(self.agent.previousState), self.recommendation)
         delta = self.agent.reward + self.gamma * current_state_value - last_state_value
 
         #Computing the gradients -----------------------------------
-        #grads = self.computeGrads(list(self.agent.previousState),self.recommendation, last_state_value)
-        #grads = self.computeGrads(last_state_value)
-        #grads = self.computeGrads(list(self.agent.previousState), self.recommendation)
-        X = np.array(self.getInput(list(self.agent.previousState), self.recommendation))# / self.n_items  # Normalization step : to change in order to get something consistent with when the dataset will be updated
+        X = np.array(self.getInput(list(self.agent.previousState), self.recommendation))
         X_tensor = torch.from_numpy(X).float()
         y_pred = self.model(X_tensor)
         loss = self.value_loss(y_pred)
